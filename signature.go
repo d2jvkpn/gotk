@@ -1,4 +1,4 @@
-package gox
+package gotk
 
 import (
 	"crypto/md5"

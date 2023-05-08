@@ -1,4 +1,4 @@
-package gox
+package gotk
 
 import (
 	"golang.org/x/exp/constraints"
