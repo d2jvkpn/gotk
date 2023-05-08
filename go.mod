@@ -1,4 +1,4 @@
-module github.com/d2jvkpn/gox
+module github.com/d2jvkpn/gotk
 
 go 1.20
 
