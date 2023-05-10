@@ -2,14 +2,11 @@ package gotk
 
 import (
 	"encoding/json"
-	"fmt"
+	"expvar"
+	// "fmt"
 	"net/http"
 	"net/http/pprof"
-	"os"
-	"path/filepath"
 	"runtime"
-	pp "runtime/pprof"
-	"time"
 )
 
 /*
@@ -67,88 +64,43 @@ func LoadPprof(mux *http.ServeMux) {
 	return
 }
 
-func PprofHandlerFuncs() map[string]http.HandlerFunc {
-	data := make(map[string]http.HandlerFunc, 11)
+func Expvars() {
+	// memStats := new(runtime.MemStats)
+	// runtime.ReadMemStats(memStats)
 
-	data["index"] = pprof.Index
-	data["profile"] = pprof.Profile
-	data["trace"] = pprof.Trace
-	data["cmdline"] = pprof.Cmdline
-	data["symbol"] = pprof.Symbol
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
+
+	// expvar.Publish("timestamp", expvar.Func(func() any {
+	// 	return time.Now().Format(time.RFC3339)
+	// }))
+
+	// export memstats and cmdline by default
+	//	expvar.Publish("memStats", expvar.Func(func() any {
+	//		memStats := new(runtime.MemStats)
+	//		runtime.ReadMemStats(memStats)
+	//		return memStats
+	//	}))
+}
+
+func PprofHandlerFuncs() map[string]http.HandlerFunc {
+	funcs := make(map[string]http.HandlerFunc, 12)
+
+	Expvars()
+	funcs["expvar"] = expvar.Handler().ServeHTTP
+
+	funcs["index"] = pprof.Index
+	funcs["profile"] = pprof.Profile
+	funcs["trace"] = pprof.Trace
+	funcs["cmdline"] = pprof.Cmdline
+	funcs["symbol"] = pprof.Symbol
 
 	for _, v := range []string{
 		"allocs", "block", "goroutine", "heap", "mutex", "threadcreate",
 	} {
-		data[v] = pprof.Handler(v).ServeHTTP
+		funcs[v] = pprof.Handler(v).ServeHTTP
 	}
 
-	return data
-}
-
-/*
-hz = 100 is recommended
-
-```bash
-
-	go install github.com/google/pprof@latest
-	pprof -eog wk_data/2022-12-01T20-38-26_10s_100hz_cpu.pprof.gz
-	go tool pprof -eog wk_data/2022-12-01T20-38-26_10s_100hz_cpu.pprof.gz
-
-```
-*/
-func PprofCollect(dir string, secs, hz int) (out string, err error) {
-	var cf, hf1, hf2 *os.File
-
-	if secs <= 0 || hz <= 0 {
-		return "", fmt.Errorf("invalid secs or hz")
-	}
-
-	out = filepath.Join(
-		dir,
-		fmt.Sprintf("pprof_%s_%ds_%dhz", time.Now().Format("2006-01-02T15-04-05"), secs, hz),
-	)
-
-	if err = os.MkdirAll(out, 0755); err != nil {
-		return "", err
-	}
-
-	defer func() {
-		if cf != nil {
-			_ = cf.Close()
-		}
-		if hf1 != nil {
-			_ = hf1.Close()
-		}
-		if hf2 != nil {
-			_ = hf2.Close()
-		}
-	}()
-
-	if cf, err = os.Create(filepath.Join(out, "cpu.pprof.gz")); err != nil {
-		return out, err
-	}
-	if hf1, err = os.Create(filepath.Join(out, "heap1.pprof.gz")); err != nil {
-		return out, err
-	}
-	if hf2, err = os.Create(filepath.Join(out, "heap2.pprof.gz")); err != nil {
-		return out, err
-	}
-
-	if err = pp.WriteHeapProfile(hf1); err != nil {
-		return out, nil
-	}
-
-	runtime.SetCPUProfileRate(hz)
-	if err = pp.StartCPUProfile(cf); err != nil {
-		return out, err
-	}
-	defer pp.StopCPUProfile()
-
-	<-time.After(time.Second * time.Duration(secs))
-
-	if err = pp.WriteHeapProfile(hf2); err != nil {
-		return out, nil
-	}
-
-	return out, nil
+	return funcs
 }
