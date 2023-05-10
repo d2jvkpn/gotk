@@ -9,35 +9,6 @@ import (
 	"runtime"
 )
 
-/*
-web browser address
-  http://localhost:8080/debug/pprof/
-
-get profiles and view in browser
-  $ go tool pprof -http=:8081 http://localhost:8080/debug/pprof/allocs?seconds=30
-  $ go tool pprof http://localhost:8080/debug/pprof/block?seconds=30
-  $ go tool pprof http://localhost:8080/debug/pprof/goroutine?seconds=30
-  $ go tool pprof http://localhost:8080/debug/pprof/heap?seconds=30
-  $ go tool pprof http://localhost:8080/debug/pprof/mutex?seconds=30
-  $ go tool pprof http://localhost:8080/debug/pprof/profile?seconds=30
-  $ go tool pprof http://localhost:8080/debug/pprof/threadcreate?seconds=30
-
-download profile file and convert to svg image
-  $ wget -O profile.out localhost:8080/debug/pprof/profile?seconds=30
-  $ go tool pprof -svg profile.out > profile.svg
-
-get pprof in 30 seconds and save to svg image
-  $ go tool pprof -svg http://localhost:8080/debug/pprof/allocs?seconds=30 > allocs.svg
-
-get trace in 5 seconds
-  $ wget -O trace.out http://localhost:8080/debug/pprof/trace?seconds=5
-  $ go tool trace trace.out
-
-get cmdline and symbol binary data
-  $ wget -O cmdline.out http://localhost:8080/debug/pprof/cmdline
-  $ wget -O symbol.out http://localhost:8080/debug/pprof/symbol
-*/
-
 // create new Pprof and run server
 func LoadPprof(mux *http.ServeMux) {
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
@@ -84,6 +55,55 @@ func Expvars() {
 	//	}))
 }
 
+/*
+web browser address
+
+	http://localhost:8080/debug/pprof/
+
+#### get profiles and view in browser
+
+```bash
+go tool pprof -http=:8081 http://localhost:8080/debug/pprof/allocs?seconds=30
+
+go tool pprof http://localhost:8080/debug/pprof/block?seconds=30
+
+go tool pprof http://localhost:8080/debug/pprof/goroutine?seconds=30
+
+go tool pprof http://localhost:8080/debug/pprof/heap?seconds=30
+
+go tool pprof http://localhost:8080/debug/pprof/mutex?seconds=30
+
+go tool pprof http://localhost:8080/debug/pprof/profile?seconds=30
+
+go tool pprof http://localhost:8080/debug/pprof/threadcreate?seconds=30
+````
+
+#### download profile file and convert to svg image
+```bash
+wget -O profile.out localhost:8080/debug/pprof/profile?seconds=30
+
+go tool pprof -svg profile.out > profile.svg
+```
+
+####get pprof in 30 seconds and save to svg image
+```bash
+go tool pprof -svg http://localhost:8080/debug/pprof/allocs?seconds=30 > allocs.svg
+```
+
+#### get trace in 5 seconds
+```bash
+wget -O trace.out http://localhost:8080/debug/pprof/trace?seconds=5
+
+go tool trace trace.out
+```
+
+#### get cmdline and symbol binary data
+```bash
+wget -O cmdline.out http://localhost:8080/debug/pprof/cmdline
+
+wget -O symbol.out http://localhost:8080/debug/pprof/symbol
+```
+*/
 func PprofHandlerFuncs() map[string]http.HandlerFunc {
 	funcs := make(map[string]http.HandlerFunc, 12)
 
