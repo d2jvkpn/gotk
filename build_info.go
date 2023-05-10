@@ -13,7 +13,7 @@ func BuildInfo() (info map[string]any) {
 	buildInfo, _ := debug.ReadBuildInfo()
 
 	info = make(map[string]any, 8)
-	info["goVersion"] = buildInfo.GoVersion
+	info["go_version"] = buildInfo.GoVersion
 
 	parseFlags := func(str string) {
 		for _, v := range strings.Fields(str) {

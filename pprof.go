@@ -67,6 +67,24 @@ func LoadPprof(mux *http.ServeMux) {
 	return
 }
 
+func PprofHandlerFuncs() map[string]http.HandlerFunc {
+	data := make(map[string]http.HandlerFunc, 11)
+
+	data["index"] = pprof.Index
+	data["profile"] = pprof.Profile
+	data["trace"] = pprof.Trace
+	data["cmdline"] = pprof.Cmdline
+	data["symbol"] = pprof.Symbol
+
+	for _, v := range []string{
+		"allocs", "block", "goroutine", "heap", "mutex", "threadcreate",
+	} {
+		data[v] = pprof.Handler(v).ServeHTTP
+	}
+
+	return data
+}
+
 /*
 hz = 100 is recommended
 
