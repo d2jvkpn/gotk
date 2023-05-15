@@ -1,26 +1,26 @@
 ### Login Api Doc
 ---
 
-#### Basics
+#### 1. Request
 - method: POST
 - path: /api/v1/open/login
 - headers:
   - Content-Type: application/json
   - Authorization: Bearer {{.ApiKey}}
 
-#### Parameters
+#### 2. Parameters
 - fields
 
-| field | type | reqired | default | note |
-| ----  | ---- | ----    | ----    | ---- |
+| field | type | required | default | note |
+| ----  | ---- | ----     | ----    | ---- |
 | page_no   | int | false | 1  | page number |
 | page_size | int | false | 30 | page size   |
 
-#### Body
+#### 3. Body
 - fields
 
-| field | type | reqired | default | note |
-| ----  | ---- | ----    | ----    | ---- |
+| field | type | required | default | note |
+| ----  | ---- | ----     | ----    | ---- |
 | model       | string    | false   | gpt-3.5-turbo | model name |
 | messages    | []Message | true    | -             | message arrary |
 | temperature | float     | false   | 1.0           | range 0.0~2.0 |
@@ -35,11 +35,13 @@
 }
 ```
 
-#### Response
+#### 4. Response
+- content type: application/json
+
 - fields
 
-| field | type | reqired | example | note |
-| ---- | ----  | ----    | ----    | ---- |
+| field | type | required | example | note |
+| ---- | ----  | ----     | ----    | ---- |
 | id      | string   | true | gpt-3.5-turbo   | model name |
 | object  | string   | true | chat.completion | chatgpt object |
 | created | int64    | true | 1677649420      | created timestamp |
@@ -49,8 +51,8 @@
 
 - struct Choice
 
-| field | type | reqired | example | note |
-| ----  | ---- | ----    | ----    | ---- |
+| field | type | required | example | note |
+| ----  | ---- | ----     | ----    | ---- |
 | role          | string | true | assistant | role |
 | content       | string | true | -         | response message |
 | finish_reason | string | true | stop      | - |
