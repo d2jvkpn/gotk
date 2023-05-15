@@ -10,6 +10,7 @@
 
 #### Parameters
 - fields
+
 | field   | type    | reqired | default | note   |
 | ------- | ------- | ------- | ------- | ------ |
 | page_no   | int | false   | 1       | page number |
@@ -17,6 +18,7 @@
 
 #### Body
 - fields
+
 | field   | type    | reqired | default | note   |
 | ------- | ------- | ------- | ------- | ------ |
 | model       | string    | false   | gpt-3.5-turbo | model name     |
@@ -35,6 +37,7 @@
 
 #### Response
 - fields
+
 | field   | type    | reqired | example | note   |
 | ------- | ------- | ------- | ------- | ------ |
 | id      | string  | true   | gpt-3.5-turbo   | model name     |
@@ -45,6 +48,7 @@
 | choices | []Choice | true  | -               | response messages |
 
 - field.choices[*]
+
 | field         | type    | reqired | example | note   |
 | -------       | ------- | ------- | ------- | ------ |
 | role          | string  | true   | assistant | role     |
