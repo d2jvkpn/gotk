@@ -6,10 +6,10 @@
 - path: /api/v1/open/login
 - headers:
   - Content-Type: application/json
-  - Authorization: Bearer {{.ApiKey}}
+  - Authorization: Bearer {{ .ApiKey }}
 
 #### 2. Parameters
-- fields
+##### 2.1 fields
 
 | field | type | required | default | note |
 | ----  | ---- | ----     | ----    | ---- |
@@ -17,7 +17,10 @@
 | page_size | int | false | 30 | page size   |
 
 #### 3. Body
-- fields
+##### 3.1 content type
+application/json
+
+##### 3.2 fields
 
 | field | type | required | default | note |
 | ----  | ---- | ----     | ----    | ---- |
@@ -27,7 +30,7 @@
 | max_tokens  | int       | false   | -             | default is unlimited |
 | user        | string    | false   | -             | user identity |
 
-- example
+##### 3.3 example
 ```json
 {
   "model": "gpt-3.5-turbo",
@@ -36,9 +39,10 @@
 ```
 
 #### 4. Response
-- content type: application/json
+##### 4.1 content type
+application/json
 
-- fields
+##### 4.2 fields
 
 | field | type | required | example | note |
 | ---- | ----  | ----     | ----    | ---- |
@@ -49,7 +53,7 @@
 | usage   | Usage    | true | -               | usage of token |
 | choices | []Choice | true | -               | response messages |
 
-- struct Choice
+**Choice**
 
 | field | type | required | example | note |
 | ----  | ---- | ----     | ----    | ---- |
@@ -58,7 +62,7 @@
 | finish_reason | string | true | stop      | - |
 | index         | int    | true | 0         | index of choices |
 
-- example
+##### 4.3 example
 ```json
 {
  "id": "chatcmpl-6p9XYPYSTTRi0xEviKjjilqrWU2Ve",
