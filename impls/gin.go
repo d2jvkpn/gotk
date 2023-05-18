@@ -124,7 +124,7 @@ func BasicAuth(username, password string, handle func(*gin.Context, string)) gin
 }
 
 // handle key: no_token, invalid_token, incorrect_token, User:XXXX
-func BasicBcrypt(username, password string, handle func(*gin.Context, string)) gin.HandlerFunc {
+func BasicBcrypt(username, password string, handle func(*gin.Context, ...string)) gin.HandlerFunc {
 	passwordBts := []byte(password)
 
 	return func(ctx *gin.Context) {
@@ -143,25 +143,32 @@ func BasicBcrypt(username, password string, handle func(*gin.Context, string)) g
 		}
 		key = key[6:]
 
+		if key, err = base64.StdEncoding.DecodeString(string(key)); err != nil {
+			handle(ctx, "no_token")
+			ctx.Abort()
+			return
+		}
+
 		u, p, found := bytes.Cut(key, []byte{':'})
 		if !found {
 			handle(ctx, "invalid_token")
 			ctx.Abort()
 			return
-		} else if string(u) != username {
-			_ = bcrypt.CompareHashAndPassword(p, passwordBts)
+		}
+		if string(u) != username {
+			_ = bcrypt.CompareHashAndPassword(passwordBts, p)
 			handle(ctx, "incorrect_token")
 			ctx.Abort()
 			return
 		}
 
-		if err = bcrypt.CompareHashAndPassword(p, passwordBts); err != nil {
+		if err = bcrypt.CompareHashAndPassword(passwordBts, p); err != nil {
 			handle(ctx, "incorrect_token")
 			ctx.Abort()
 			return
 		}
 
-		handle(ctx, fmt.Sprintf("User:%s", username))
+		handle(ctx, "user", username)
 		ctx.Next()
 	}
 }
