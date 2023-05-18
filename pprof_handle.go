@@ -110,7 +110,7 @@ func PprofHandlerFuncs() map[string]http.HandlerFunc {
 	Expvars()
 	funcs["expvar"] = expvar.Handler().ServeHTTP
 
-	funcs["index"] = pprof.Index
+	funcs[""] = pprof.Index
 	funcs["profile"] = pprof.Profile
 	funcs["trace"] = pprof.Trace
 	funcs["cmdline"] = pprof.Cmdline
