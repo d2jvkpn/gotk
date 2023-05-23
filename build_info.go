@@ -38,7 +38,8 @@ func BuildInfo() (info map[string]any) {
 func BuildInfoText(info map[string]any) string {
 	strs := make([]string, 0, len(info))
 	for k, v := range info {
-		strs = append(strs, fmt.Sprintf("%s: %v", strings.Title(k), v))
+		// strs = append(strs, fmt.Sprintf("%s: %v", strings.Title(k), v))
+		strs = append(strs, fmt.Sprintf("%s: %v", k, v))
 	}
 
 	sort.Strings(strs)
