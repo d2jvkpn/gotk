@@ -12,9 +12,15 @@ import (
 )
 
 type BasicAuthentication struct {
-	Enable bool              `mapstructure:"enable"`
-	Method string            `mapstructure:"method"`
-	Users  map[string]string `mapstructure:"users"`
+	Enable bool   `mapstructure:"enable"`
+	Method string `mapstructure:"method"`
+	Users  []User `mapstructure:"users"`
+	users  map[string]string
+}
+
+type User struct {
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
 }
 
 func NewBasicAuthentication(vp *viper.Viper, field string) (auth *BasicAuthentication, err error) {
@@ -39,10 +45,12 @@ func (auth *BasicAuthentication) Validate() (err error) {
 		return fmt.Errorf("users is unset")
 	}
 
-	for k, v := range auth.Users {
-		if k == "" || v == "" {
+	auth.users = make(map[string]string, len(auth.Users))
+	for _, user := range auth.Users {
+		if user.Username == "" || user.Password == "" {
 			return fmt.Errorf("invalid element exists in users")
 		}
+		auth.users[user.Username] = user.Password
 	}
 
 	return nil
@@ -84,7 +92,7 @@ func (auth *BasicAuthentication) Handle(w http.ResponseWriter, r *http.Request) 
 
 	if auth.Method == "md5" {
 		md5sum := fmt.Sprintf("%x", md5.Sum(key))
-		if md5sum != auth.Users[string(u)] {
+		if md5sum != auth.users[string(u)] {
 			return string(u), "incorrect_username_or_password",
 				fmt.Errorf("incorrect username or password")
 		}
@@ -92,7 +100,7 @@ func (auth *BasicAuthentication) Handle(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// auth.Method == "bcrypt"
-	if password, ok = auth.Users[string(u)]; !ok {
+	if password, ok = auth.users[string(u)]; !ok {
 		_ = bcrypt.CompareHashAndPassword([]byte(password), p)
 		return string(u), "incorrect_username", fmt.Errorf("incorrect username or password")
 	}
