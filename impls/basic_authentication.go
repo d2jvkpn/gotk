@@ -49,9 +49,9 @@ func (auth *BasicAuthentication) Validate() (err error) {
 }
 
 func (auth *BasicAuthentication) Handle(w http.ResponseWriter, r *http.Request) (
-	code string, err error) {
+	user, code string, err error) {
 	if !auth.Enable {
-		return "disabled", nil
+		return "", "disabled", nil
 	}
 
 	var (
@@ -69,38 +69,39 @@ func (auth *BasicAuthentication) Handle(w http.ResponseWriter, r *http.Request) 
 
 	key = []byte(r.Header.Get("Authorization"))
 	if !bytes.HasPrefix(key, []byte("Basic ")) {
-		return "login_required", fmt.Errorf("login required")
+		return "", "login_required", fmt.Errorf("login required")
 	}
 	key = key[6:]
 
 	if key, err = base64.StdEncoding.DecodeString(string(key)); err != nil {
-		return "decode_basic_failed", fmt.Errorf("invalid token")
+		return "", "decode_basic_failed", fmt.Errorf("invalid token")
 	}
 
 	u, p, found := bytes.Cut(key, []byte{':'})
 	if !found {
-		return "invalid_token", fmt.Errorf("invalid token")
+		return string(u), "invalid_token", fmt.Errorf("invalid token")
 	}
 
 	if auth.Method == "md5" {
 		md5sum := fmt.Sprintf("%x", md5.Sum(key))
 		if md5sum != auth.Users[string(u)] {
-			return "incorrect_username_or_password", fmt.Errorf("incorrect username or password")
+			return string(u), "incorrect_username_or_password",
+				fmt.Errorf("incorrect username or password")
 		}
-		return "md5", nil
+		return string(u), "md5", nil
 	}
 
 	// auth.Method == "bcrypt"
 	if password, ok = auth.Users[string(u)]; !ok {
 		_ = bcrypt.CompareHashAndPassword([]byte(password), p)
-		return "incorrect_username", fmt.Errorf("incorrect username or password")
+		return string(u), "incorrect_username", fmt.Errorf("incorrect username or password")
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(password), p); err != nil {
-		return "incorrect_password", fmt.Errorf("incorrect username or password")
+		return string(u), "incorrect_password", fmt.Errorf("incorrect username or password")
 	}
 
 	r.Header.Del("Authorization")
 
-	return "bcrypt", nil
+	return string(u), "bcrypt", nil
 }
