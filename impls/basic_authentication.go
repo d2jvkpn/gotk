@@ -23,15 +23,29 @@ func NewBasicAuthentication(vp *viper.Viper, field string) (auth *BasicAuthentic
 		return nil, err
 	}
 
-	if auth.Method != "md5" && auth.Method != "bcrypt" {
-		return nil, fmt.Errorf("invalid method")
-	}
-
-	if len(auth.Users) == 0 {
-		return nil, fmt.Errorf("users is unset")
+	if err = auth.Validate(); err != nil {
+		return nil, err
 	}
 
 	return auth, nil
+}
+
+func (auth *BasicAuthentication) Validate() (err error) {
+	if auth.Method != "md5" && auth.Method != "bcrypt" {
+		return fmt.Errorf("invalid method")
+	}
+
+	if len(auth.Users) == 0 {
+		return fmt.Errorf("users is unset")
+	}
+
+	for k, v := range auth.Users {
+		if k == "" || v == "" {
+			return fmt.Errorf("invalid element exists in users")
+		}
+	}
+
+	return nil
 }
 
 func (auth *BasicAuthentication) Handle(w http.ResponseWriter, r *http.Request) (
