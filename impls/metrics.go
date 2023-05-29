@@ -69,7 +69,8 @@ func HttpMetrics(vp *viper.Viper, meta map[string]any, opts ...func(*http.Server
 	gin.SetMode(gin.ReleaseMode)
 	engine = gin.New()
 	// engine.Use(gin.Recovery())
-	engine.Use(Cors(vp.GetString("*")))
+	// engine.Use(Cors(vp.GetString("*")))
+	// engine.NoRoute(no_route())
 	router = &engine.RouterGroup
 
 	router.GET("/healthz", func(ctx *gin.Context) {
@@ -81,7 +82,7 @@ func HttpMetrics(vp *viper.Viper, meta map[string]any, opts ...func(*http.Server
 	}
 
 	if enableDebug {
-		debug := router.Group("/debug")
+		debug := router.Group("/debug", Cors(vp.GetString("*")))
 
 		debug.GET("/meta", func(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, meta)
@@ -185,7 +186,7 @@ func PromMetrics() (hf gin.HandlerFunc, err error) {
 		if ms == 0 {
 			msFloat = 0.1
 		}
-		// requestsDuration.WithLabelValues(req.URL.Path).Observe(msFloat)
+		// requestsDuration.WithLabelValues(status, req.Method, req.URL.Path).Observe(msFloat)
 		requestsDuration.Observe(msFloat)
 	}
 
