@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -58,6 +59,10 @@ func IndexStaticFiles(router *gin.RouterGroup, d string) (err error) {
 }
 
 func Cors(origin string) gin.HandlerFunc {
+	if origin == "" {
+		origin = "*"
+	}
+
 	allowHeaders := strings.Join([]string{"Content-Type", "Authorization"}, ", ")
 
 	exposeHeaders := strings.Join([]string{
@@ -170,5 +175,48 @@ func BasicBcrypt(username, password string, handle func(*gin.Context, ...string)
 
 		handle(ctx, "user", username)
 		ctx.Next()
+	}
+}
+
+func CacheControl(seconds int) gin.HandlerFunc {
+	cc := fmt.Sprintf("public, max-age=%d", seconds)
+	// strconv.FormatInt(time.Now().UnixMilli(), 10)
+	etag := fmt.Sprintf(`"%d"`, time.Now().UnixMilli()) // must be a quoted string
+
+	return func(ctx *gin.Context) {
+		if ctx.Request.Method != "GET" {
+			ctx.Next()
+			return
+		}
+
+		ctx.Header("Cache-Control", cc)
+		// browser send If-None-Match: etag, if unchanged, response 304
+		ctx.Header("ETag", etag)
+		ctx.Next()
+	}
+}
+
+func Healthz(ctx *gin.Context) {
+	ctx.AbortWithStatus(http.StatusOK)
+}
+
+func ServeStaticDir(httpDir, local string, listDir bool) func(*gin.RouterGroup) {
+	return func(rg *gin.RouterGroup) {
+		if listDir {
+			rg.StaticFS(httpDir, http.Dir(local))
+		} else {
+			rg.Static(httpDir, local)
+		}
+		return
+	}
+}
+
+// name: filename, e.g. favicon.ico
+// ct: Content-Type, e.g. image/x-icon
+func ServeStaticFile(bts []byte, name, ct string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		reader := bytes.NewReader(bts)
+		ctx.Header("Content-Type", ct)
+		http.ServeContent(ctx.Writer, ctx.Request, name, time.Now(), reader)
 	}
 }

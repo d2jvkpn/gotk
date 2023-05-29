@@ -35,7 +35,7 @@ func LoadPprof(mux *http.ServeMux) {
 	return
 }
 
-func Expvars() {
+func expvars() {
 	// memStats := new(runtime.MemStats)
 	// runtime.ReadMemStats(memStats)
 
@@ -107,7 +107,7 @@ wget -O symbol.out http://localhost:8080/debug/pprof/symbol
 func PprofHandlerFuncs() map[string]http.HandlerFunc {
 	funcs := make(map[string]http.HandlerFunc, 12)
 
-	Expvars()
+	expvars()
 	funcs["expvar"] = expvar.Handler().ServeHTTP
 
 	funcs[""] = pprof.Index
