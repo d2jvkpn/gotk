@@ -2,10 +2,8 @@ module github.com/d2jvkpn/gotk/impls
 
 go 1.20
 
-replace github.com/d2jvkpn/gotk => ../
-
 require (
-	github.com/d2jvkpn/gotk v0.0.0-00010101000000-000000000000
+	github.com/d2jvkpn/gotk v0.0.0-20230529112421-aa46d6dd572b
 	github.com/gin-gonic/gin v1.9.0
 	github.com/prometheus/client_golang v1.15.1
 	github.com/spf13/viper v1.15.0
@@ -67,7 +65,7 @@ require (
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53 // indirect
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
