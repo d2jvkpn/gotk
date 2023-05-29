@@ -12,13 +12,17 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/semconv/v1.12.0"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 )
 
 // #### Usage demo:
 //
-// ```go
+//	```go
+//	import (
+//		"go.opentelemetry.io/otel/attribute"
+//		"go.opentelemetry.io/otel/trace"
+//	)
 //
 //	//==> funcA(ctx context.Context)
 //	span := trace.SpanFromContext(ctx)
@@ -44,14 +48,17 @@ import (
 //		trace.WithAttributes(attribute.Int64("count", 42)),
 //	}
 //	span.AddEvent("successfully finished call service-c", opts...)
+//	```
 //
-// ```
+//	```go
+//	engi.Use(otelgin.Middleware("service"))
+//	```
 func LoadOtel(addr, service string, secure bool) (closeOtel func(), err error) {
 	var (
 		client   otlptrace.Client
 		exporter *otlptrace.Exporter
 		reso     *resource.Resource
-		provider *trace.TracerProvider
+		provider *sdktrace.TracerProvider
 	)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -84,11 +91,11 @@ func LoadOtel(addr, service string, secure bool) (closeOtel func(), err error) {
 		return nil, err
 	}
 
-	bsp := trace.NewBatchSpanProcessor(exporter)
-	provider = trace.NewTracerProvider(
-		trace.WithSampler(trace.AlwaysSample()),
-		trace.WithResource(reso),
-		trace.WithSpanProcessor(bsp),
+	bsp := sdktrace.NewBatchSpanProcessor(exporter)
+	provider = sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithResource(reso),
+		sdktrace.WithSpanProcessor(bsp),
 	)
 
 	// set global propagator to tracecontext (the default is no-op).

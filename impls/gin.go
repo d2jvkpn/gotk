@@ -213,7 +213,15 @@ func ServeStaticDir(httpDir, local string, listDir bool) func(*gin.RouterGroup) 
 
 // name: filename, e.g. favicon.ico
 // ct: Content-Type, e.g. image/x-icon
-func ServeStaticFile(bts []byte, name, ct string) gin.HandlerFunc {
+func ServeStaticFile(bts []byte, name string) gin.HandlerFunc {
+	ct := ""
+	if len(bts) > 512 {
+		ct = http.DetectContentType(bts[:512])
+	} else {
+		ct = http.DetectContentType(bts)
+	}
+	// ext := mini.ExtensionsByType(ct)
+
 	return func(ctx *gin.Context) {
 		reader := bytes.NewReader(bts)
 		ctx.Header("Content-Type", ct)
