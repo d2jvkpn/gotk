@@ -17,6 +17,15 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+/*
+test_tracer0001:
+- call01:
+  - step01
+  - call02
+
+- call02
+- job01
+*/
 func TestTracer(t *testing.T) {
 	ctx := context.Background()
 
@@ -63,16 +72,27 @@ func TestTracer(t *testing.T) {
 	}()
 
 	otel.SetTracerProvider(tp)
+
+	//
 	tracer := otel.Tracer("test_tracer")
 
-	ctx, span := tracer.Start(ctx, "parent")
+	tCtx, span := tracer.Start(ctx, "test_tracer0001")
 	fmt.Println(
-		"~~~ TestTracer:",
+		"~~~ test_tracer0001:",
 		span.SpanContext().TraceID().String(),
 		span.SpanContext().SpanID().String(),
 	)
 
-	call01(ctx)
+	tCtx1, span1 := tracer.Start(ctx, "test_tracer0001")
+	call01(tCtx1)
+	span1.End()
+
+	call02(tCtx)
+
+	_, span2 := tracer.Start(tCtx, "job01")
+	time.Sleep(time.Second)
+	span2.End()
+
 	span.End()
 }
 
@@ -95,7 +115,7 @@ func call01(ctx context.Context) {
 	tracer := otel.Tracer("call01")
 
 	// Create a span to track `childFunction()` - this is a nested span whose parent is `parentSpan`
-	ctx, span := tracer.Start(ctx, "step01")
+	tCtx, span := tracer.Start(ctx, "step01")
 	defer span.End()
 
 	fmt.Println(
@@ -104,9 +124,8 @@ func call01(ctx context.Context) {
 		span.SpanContext().SpanID().String(),
 	)
 
-	call02(ctx)
-	time.Sleep(1 * time.Second)
-	call02(ctx)
+	call02(tCtx)
+	time.Sleep(3 * time.Second)
 
 	opts := []trace.EventOption{
 		trace.WithAttributes(attribute.Int64("count", 42)),
@@ -128,17 +147,6 @@ func call02(ctx context.Context) {
 		parentSpan.SpanContext().SpanID().String(),
 	)
 
-	tracer := otel.Tracer("call02")
-
-	// Create a span to track `childFunction()` - this is a nested span whose parent is `parentSpan`
-	ctx, span := tracer.Start(ctx, "step02")
-	defer span.End()
-
-	fmt.Println(
-		"~~~ CurrentSpan:",
-		span.SpanContext().TraceID().String(),
-		span.SpanContext().SpanID().String(),
-	)
-
 	time.Sleep(3 * time.Second)
+	parentSpan.AddEvent("call02 is done")
 }
