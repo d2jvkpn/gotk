@@ -16,43 +16,6 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 )
 
-// #### Usage demo:
-//
-//	```go
-//	import (
-//		"go.opentelemetry.io/otel/attribute"
-//		"go.opentelemetry.io/otel/trace"
-//	)
-//
-//	//==> funcA(ctx context.Context)
-//	span := trace.SpanFromContext(ctx)
-//	traceId := span.SpanContext().TraceID().String()
-//	spanId := span.SpanContext().SpanID().String()
-//	fmt.Println("~~~ funcA:", traceId, spanId)
-//	funcB(ctx, "order0001")
-//
-//	//==> funcB(ctx, oid string)
-//	span := trace.SpanFromContext(ctx)
-//	labels := []attribute.KeyValue{
-//		attribute.String("orderId", oid),
-//	}
-//	span.SetAttributes(labels...)
-//	funcC(ctx)
-//
-//	//==> funcC(ctx context.Context)
-//	tracer := otel.Tracer("service-c")
-//	_, span := tracer.Start(ctx, "c1")
-//	defer span.End()
-//	time.Sleep(3*time.Second)
-//	opts := []trace.EventOption{
-//		trace.WithAttributes(attribute.Int64("count", 42)),
-//	}
-//	span.AddEvent("successfully finished call service-c", opts...)
-//	```
-//
-//	```go
-//	engi.Use(otelgin.Middleware("service"))
-//	```
 func LoadOtel(addr, service string, secure bool) (closeOtel func(), err error) {
 	var (
 		client   otlptrace.Client

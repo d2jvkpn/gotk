@@ -78,10 +78,13 @@ func TestTracer(t *testing.T) {
 
 func call01(ctx context.Context) {
 	fmt.Println("==>", "call01")
-
 	fmt.Printf("~~~ Context: %v\n", ctx)
-
 	parentSpan := trace.SpanFromContext(ctx)
+
+	labels := []attribute.KeyValue{
+		attribute.String("orderId", "order0001"),
+	}
+	parentSpan.SetAttributes(labels...)
 
 	fmt.Println(
 		"~~~ ParentSpan:",
@@ -105,7 +108,11 @@ func call01(ctx context.Context) {
 	time.Sleep(1 * time.Second)
 	call02(ctx)
 
-	span.AddEvent("call01 is done", trace.WithAttributes(attribute.Int64("count", 42)))
+	opts := []trace.EventOption{
+		trace.WithAttributes(attribute.Int64("count", 42)),
+	}
+
+	span.AddEvent("call01 is done", opts...)
 	span.SetStatus(codes.Ok, "ok")
 }
 
