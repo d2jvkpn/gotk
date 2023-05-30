@@ -11,7 +11,7 @@ import (
 	"github.com/d2jvkpn/gotk"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+	// "github.com/prometheus/client_golang/prometheus/promauto" // ?
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 )
@@ -127,14 +127,14 @@ func HttpMetrics(vp *viper.Viper, meta map[string]any, opts ...func(*http.Server
 // https://prometheus.io/docs/prometheus/latest/querying/examples/
 // https://robert-scherbarth.medium.com/measure-request-duration-with-prometheus-and-golang-adc6f4ca05fe
 func PromMetrics() (hf gin.HandlerFunc, err error) {
-	requestsTotal := promauto.NewCounterVec(prometheus.CounterOpts{
+	requestsTotal := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Subsystem: "http",
 		Name:      "http_requests_total",
 		Help:      "Total number of HTTP requests",
 	}, []string{"status"})
 
 	// promauto.NewHistogramVec
-	requestsDuration := promauto.NewHistogram(prometheus.HistogramOpts{
+	requestsDuration := prometheus.NewHistogram(prometheus.HistogramOpts{
 		Subsystem: "http",
 		Name:      "http_requests_duration",
 		Help:      "Request duration(milliseconds) of HTTP requests",
