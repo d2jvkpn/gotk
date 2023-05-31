@@ -1,4 +1,4 @@
-package impls
+package gotk
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type BasicAuthentication struct {
+type BasicAuths struct {
 	Enable bool   `mapstructure:"enable"`
 	Method string `mapstructure:"method"`
 	Users  []User `mapstructure:"users"`
@@ -23,8 +23,8 @@ type User struct {
 	Password string `mapstructure:"password"`
 }
 
-func NewBasicAuthentication(vp *viper.Viper, field string) (auth *BasicAuthentication, err error) {
-	auth = new(BasicAuthentication)
+func NewBasicAuths(vp *viper.Viper, field string) (auth *BasicAuths, err error) {
+	auth = new(BasicAuths)
 	if err = vp.UnmarshalKey(field, auth); err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func NewBasicAuthentication(vp *viper.Viper, field string) (auth *BasicAuthentic
 	return auth, nil
 }
 
-func (auth *BasicAuthentication) Validate() (err error) {
+func (auth *BasicAuths) Validate() (err error) {
 	if auth.Method != "md5" && auth.Method != "bcrypt" {
 		return fmt.Errorf("invalid method")
 	}
@@ -56,7 +56,7 @@ func (auth *BasicAuthentication) Validate() (err error) {
 	return nil
 }
 
-func (auth *BasicAuthentication) Handle(w http.ResponseWriter, r *http.Request) (
+func (auth *BasicAuths) Handle(w http.ResponseWriter, r *http.Request) (
 	user, code string, err error) {
 	if !auth.Enable {
 		return "", "disabled", nil

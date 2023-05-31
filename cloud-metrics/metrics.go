@@ -1,4 +1,4 @@
-package impls
+package metrics
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/d2jvkpn/gotk"
+	"github.com/d2jvkpn/gotk/ginx"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	// "github.com/prometheus/client_golang/prometheus/promauto" // ?
@@ -82,7 +83,7 @@ func HttpMetrics(vp *viper.Viper, meta map[string]any, opts ...func(*http.Server
 	}
 
 	if enableDebug {
-		debug := router.Group("/debug", Cors(vp.GetString("*")))
+		debug := router.Group("/debug", ginx.Cors(vp.GetString("*")))
 
 		debug.GET("/meta", func(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, meta)

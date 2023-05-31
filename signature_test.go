@@ -1,4 +1,4 @@
-package impls
+package gotk
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package impls
+package metrics
 
 import (
 	// "fmt"

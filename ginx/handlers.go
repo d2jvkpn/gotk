@@ -1,4 +1,4 @@
-package impls
+package ginx
 
 import (
 	"bytes"
@@ -16,79 +16,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// errors: value is unset, type not match
-func Get[T any](ctx *gin.Context, key string) (item T, err error) {
-	var (
-		ok    bool
-		value any
-	)
-
-	if value, ok = ctx.Get(key); !ok {
-		// return item, fmt.Errorf("value is unset: %s", key)
-		return item, fmt.Errorf("value is unset")
-	}
-
-	if item, ok = value.(T); !ok {
-		// return item, fmt.Errorf("type of value doesn't match: %s", key)
-		return item, fmt.Errorf("type not match")
-	}
-
-	return item, nil
-}
-
-func IndexStaticFiles(router *gin.RouterGroup, d string) (err error) {
-	var files []fs.FileInfo
-
-	if files, err = ioutil.ReadDir(d); err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil
-		}
-		return err
-	}
-
-	for _, f := range files {
-		if f.IsDir() {
-			continue
-		}
-
-		router.StaticFile("/"+f.Name(), filepath.Join(d, f.Name()))
-	}
-
-	return nil
-}
-
-func Cors(origin string) gin.HandlerFunc {
-	if origin == "" {
-		origin = "*"
-	}
-
-	allowHeaders := strings.Join([]string{"Content-Type", "Authorization"}, ", ")
-
-	exposeHeaders := strings.Join([]string{
-		"Access-Control-Allow-Origin",
-		"Access-Control-Allow-Headers",
-		"Content-Type",
-		"Content-Length",
-	}, ", ")
-
-	return func(ctx *gin.Context) {
-		ctx.Header("Access-Control-Allow-Origin", origin)
-
-		ctx.Header("Access-Control-Allow-Headers", allowHeaders)
-		// Content-Type, Authorization, X-CSRF-Token
-		ctx.Header("Access-Control-Expose-Headers", exposeHeaders)
-		ctx.Header("Access-Control-Allow-Credentials", "true")
-		ctx.Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD")
-
-		if ctx.Request.Method == "OPTIONS" {
-			ctx.AbortWithStatus(http.StatusNoContent)
-			return
-		}
-
-		ctx.Next()
-	}
-}
 
 // handle key: no_token, invalid_token, incorrect_token, User:XXXX
 func BasicAuth(username, password string, handle func(*gin.Context, string)) gin.HandlerFunc {
@@ -178,26 +105,29 @@ func BasicBcrypt(username, password string, handle func(*gin.Context, ...string)
 	}
 }
 
-func CacheControl(seconds int) gin.HandlerFunc {
-	cc := fmt.Sprintf("public, max-age=%d", seconds)
-	// strconv.FormatInt(time.Now().UnixMilli(), 10)
-	etag := fmt.Sprintf(`"%d"`, time.Now().UnixMilli()) // must be a quoted string
-
-	return func(ctx *gin.Context) {
-		if ctx.Request.Method != "GET" {
-			ctx.Next()
-			return
-		}
-
-		ctx.Header("Cache-Control", cc)
-		// browser send If-None-Match: etag, if unchanged, response 304
-		ctx.Header("ETag", etag)
-		ctx.Next()
-	}
-}
-
 func Healthz(ctx *gin.Context) {
 	ctx.AbortWithStatus(http.StatusOK)
+}
+
+func IndexStaticFiles(router *gin.RouterGroup, d string) (err error) {
+	var files []fs.FileInfo
+
+	if files, err = ioutil.ReadDir(d); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return err
+	}
+
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+
+		router.StaticFile("/"+f.Name(), filepath.Join(d, f.Name()))
+	}
+
+	return nil
 }
 
 func ServeStaticDir(httpDir, local string, listDir bool) func(*gin.RouterGroup) {
@@ -227,4 +157,15 @@ func ServeStaticFile(bts []byte, name string) gin.HandlerFunc {
 		ctx.Header("Content-Type", ct)
 		http.ServeContent(ctx.Writer, ctx.Request, name, time.Now(), reader)
 	}
+}
+
+func WsUpgrade(ctx *gin.Context) {
+	if ctx.GetHeader("Upgrade") != "websocket" && ctx.GetHeader("Connection") != "Upgrade" {
+		// fmt.Printf("~~~~ Headers: %v\n", ctx.Request.Header)
+		ctx.String(http.StatusUpgradeRequired, "Upgrade Required")
+		ctx.Abort()
+		return
+	}
+
+	ctx.Next()
 }
