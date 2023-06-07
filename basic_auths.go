@@ -12,13 +12,13 @@ import (
 )
 
 type BasicAuths struct {
-	Enable bool   `mapstructure:"enable"`
-	Method string `mapstructure:"method"`
-	Users  []User `mapstructure:"users"`
-	users  map[string]*User
+	Enable bool            `mapstructure:"enable"`
+	Method string          `mapstructure:"method"`
+	Users  []BasicAuthUser `mapstructure:"users"`
+	users  map[string]*BasicAuthUser
 }
 
-type User struct {
+type BasicAuthUser struct {
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	Value    string `mapstructure:"value"`
@@ -46,7 +46,7 @@ func (auth *BasicAuths) Validate() (err error) {
 		return fmt.Errorf("users is unset")
 	}
 
-	auth.users = make(map[string]*User, len(auth.Users))
+	auth.users = make(map[string]*BasicAuthUser, len(auth.Users))
 	for _, user := range auth.Users {
 		if user.Username == "" || user.Password == "" {
 			return fmt.Errorf("invalid element exists in users")
@@ -58,7 +58,7 @@ func (auth *BasicAuths) Validate() (err error) {
 }
 
 func (auth *BasicAuths) Handle(w http.ResponseWriter, r *http.Request) (
-	user *User, code string, err error) {
+	user *BasicAuthUser, code string, err error) {
 	if !auth.Enable {
 		return nil, "disabled", nil
 	}
@@ -91,7 +91,7 @@ func (auth *BasicAuths) Handle(w http.ResponseWriter, r *http.Request) (
 		return nil, "invalid_token", fmt.Errorf("invalid token")
 	}
 
-	u2 := &User{Username: string(u)}
+	u2 := &BasicAuthUser{Username: string(u)}
 	if auth.Method == "md5" {
 		md5sum := fmt.Sprintf("%x", md5.Sum(key))
 		if user, ok = auth.users[string(u)]; !ok {
