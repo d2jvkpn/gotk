@@ -15,12 +15,13 @@ type BasicAuths struct {
 	Enable bool   `mapstructure:"enable"`
 	Method string `mapstructure:"method"`
 	Users  []User `mapstructure:"users"`
-	users  map[string]string
+	users  map[string]*User
 }
 
 type User struct {
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
+	Value    string `mapstructure:"value"`
 }
 
 func NewBasicAuths(vp *viper.Viper, field string) (auth *BasicAuths, err error) {
@@ -45,21 +46,21 @@ func (auth *BasicAuths) Validate() (err error) {
 		return fmt.Errorf("users is unset")
 	}
 
-	auth.users = make(map[string]string, len(auth.Users))
+	auth.users = make(map[string]*User, len(auth.Users))
 	for _, user := range auth.Users {
 		if user.Username == "" || user.Password == "" {
 			return fmt.Errorf("invalid element exists in users")
 		}
-		auth.users[user.Username] = user.Password
+		auth.users[user.Username] = &user
 	}
 
 	return nil
 }
 
 func (auth *BasicAuths) Handle(w http.ResponseWriter, r *http.Request) (
-	user, code string, err error) {
+	user *User, code string, err error) {
 	if !auth.Enable {
-		return "", "disabled", nil
+		return nil, "disabled", nil
 	}
 
 	var (
@@ -77,39 +78,41 @@ func (auth *BasicAuths) Handle(w http.ResponseWriter, r *http.Request) (
 
 	key = []byte(r.Header.Get("Authorization"))
 	if !bytes.HasPrefix(key, []byte("Basic ")) {
-		return "", "login_required", fmt.Errorf("login required")
+		return nil, "login_required", fmt.Errorf("login required")
 	}
 	key = key[6:]
 
 	if key, err = base64.StdEncoding.DecodeString(string(key)); err != nil {
-		return "", "decode_basic_failed", fmt.Errorf("invalid token")
+		return nil, "decode_basic_failed", fmt.Errorf("invalid token")
 	}
 
 	u, p, found := bytes.Cut(key, []byte{':'})
 	if !found {
-		return string(u), "invalid_token", fmt.Errorf("invalid token")
+		return nil, "invalid_token", fmt.Errorf("invalid token")
 	}
 
 	if auth.Method == "md5" {
 		md5sum := fmt.Sprintf("%x", md5.Sum(key))
-		if md5sum != auth.users[string(u)] {
-			return string(u), "incorrect_username_or_password",
-				fmt.Errorf("incorrect username or password")
+		if user, ok = auth.users[string(u)]; !ok {
+			return nil, "incorrect_username", fmt.Errorf("incorrect username or password")
 		}
-		return string(u), "md5", nil
+		if md5sum != user.Password {
+			return nil, "incorrect_password", fmt.Errorf("incorrect username or password")
+		}
+		return nil, "md5", nil
 	}
 
 	// auth.Method == "bcrypt"
-	if password, ok = auth.users[string(u)]; !ok {
-		_ = bcrypt.CompareHashAndPassword([]byte(password), p)
-		return string(u), "incorrect_username", fmt.Errorf("incorrect username or password")
+	if user, ok = auth.users[string(u)]; !ok {
+		_ = bcrypt.CompareHashAndPassword([]byte(user.Password), p)
+		return nil, "incorrect_username", fmt.Errorf("incorrect username or password")
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(password), p); err != nil {
-		return string(u), "incorrect_password", fmt.Errorf("incorrect username or password")
+		return nil, "incorrect_password", fmt.Errorf("incorrect username or password")
 	}
 
 	r.Header.Del("Authorization")
 
-	return string(u), "bcrypt", nil
+	return nil, "bcrypt", nil
 }

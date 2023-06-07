@@ -63,22 +63,22 @@ func TestLoadOtelFile(t *testing.T) {
 func call01(ctx context.Context) {
 	fmt.Println("==>", "call01")
 	fmt.Printf("~~~ Context: %v\n", ctx)
-	parentSpan := trace.SpanFromContext(ctx)
+	pSpan := trace.SpanFromContext(ctx)
 
 	labels := []attribute.KeyValue{
 		attribute.String("orderId", "order0001"),
 	}
-	parentSpan.SetAttributes(labels...)
+	pSpan.SetAttributes(labels...)
 
 	fmt.Println(
-		"~~~ ParentSpan:",
-		parentSpan.SpanContext().TraceID().String(),
-		parentSpan.SpanContext().SpanID().String(),
+		"~~~ pSpan:",
+		pSpan.SpanContext().TraceID().String(),
+		pSpan.SpanContext().SpanID().String(),
 	)
 
 	tracer := otel.Tracer("call01")
 
-	// Create a span to track `childFunction()` - this is a nested span whose parent is `parentSpan`
+	// Create a span to track `childFunction()` - this is a nested span whose parent is `pSpan`
 	tCtx, span := tracer.Start(ctx, "step01")
 	defer span.End()
 
@@ -103,14 +103,15 @@ func call02(ctx context.Context) {
 	fmt.Println("==>", "call02")
 	fmt.Printf("~~~ Context: %v\n", ctx)
 
-	parentSpan := trace.SpanFromContext(ctx)
+	span := trace.SpanFromContext(ctx)
 
 	fmt.Println(
-		"~~~ ParentSpan:",
-		parentSpan.SpanContext().TraceID().String(),
-		parentSpan.SpanContext().SpanID().String(),
+		"~~~ call02 Span:",
+		span.SpanContext().TraceID().String(),
+		span.SpanContext().SpanID().String(),
 	)
 
 	time.Sleep(3 * time.Second)
-	parentSpan.AddEvent("call02 is done")
+
+	span.AddEvent("call02 is done")
 }
