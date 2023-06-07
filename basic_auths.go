@@ -91,28 +91,29 @@ func (auth *BasicAuths) Handle(w http.ResponseWriter, r *http.Request) (
 		return nil, "invalid_token", fmt.Errorf("invalid token")
 	}
 
+	u2 := &User{Username: string(u)}
 	if auth.Method == "md5" {
 		md5sum := fmt.Sprintf("%x", md5.Sum(key))
 		if user, ok = auth.users[string(u)]; !ok {
-			return nil, "incorrect_username", fmt.Errorf("incorrect username or password")
+			return u2, "incorrect_username", fmt.Errorf("incorrect username or password")
 		}
 		if md5sum != user.Password {
-			return nil, "incorrect_password", fmt.Errorf("incorrect username or password")
+			return u2, "incorrect_password", fmt.Errorf("incorrect username or password")
 		}
-		return nil, "md5", nil
+		return u2, "md5", nil
 	}
 
 	// auth.Method == "bcrypt"
 	if user, ok = auth.users[string(u)]; !ok {
 		_ = bcrypt.CompareHashAndPassword([]byte(user.Password), p)
-		return nil, "incorrect_username", fmt.Errorf("incorrect username or password")
+		return u2, "incorrect_username", fmt.Errorf("incorrect username or password")
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(password), p); err != nil {
-		return nil, "incorrect_password", fmt.Errorf("incorrect username or password")
+		return u2, "incorrect_password", fmt.Errorf("incorrect username or password")
 	}
 
 	r.Header.Del("Authorization")
 
-	return nil, "bcrypt", nil
+	return user, "bcrypt", nil
 }
