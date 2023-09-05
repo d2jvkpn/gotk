@@ -131,13 +131,15 @@ func IndexStaticFiles(router *gin.RouterGroup, d string) (err error) {
 }
 
 func ServeStaticDir(httpDir, local string, listDir bool) func(*gin.RouterGroup) {
-	return func(rg *gin.RouterGroup) {
-		if listDir {
+
+	if listDir {
+		return func(rg *gin.RouterGroup) {
 			rg.StaticFS(httpDir, http.Dir(local))
-		} else {
+		}
+	} else {
+		return func(rg *gin.RouterGroup) {
 			rg.Static(httpDir, local)
 		}
-		return
 	}
 }
 
