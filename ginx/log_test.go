@@ -1,6 +1,7 @@
 package ginx
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,4 +16,12 @@ func TestCtx(t *testing.T) {
 
 	data, ok := ctx.Get(GIN_Data)
 	fmt.Printf("ok: %t, data: %+v\n", ok, data)
+
+	call(ctx)
+	data, ok = ctx.Get(GIN_Data)
+	fmt.Printf("ok: %t, data: %+v\n", ok, data) // has no ans: 42
+}
+
+func call(ctx context.Context) {
+	ctx = context.WithValue(ctx, "ans", 42)
 }
