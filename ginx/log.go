@@ -25,7 +25,22 @@ func SetError(ctx *gin.Context, err any) {
 	ctx.Set(GIN_Error, err)
 }
 
-func SetIdentity(ctx *gin.Context, key string, val any) {
+func SetIdentity(ctx *gin.Context, kv map[string]any) {
+	identity, e := Get[map[string]any](ctx, GIN_Identity)
+	if e != nil {
+		identity = make(map[string]any, 1)
+	}
+
+	for k := range kv {
+		identity[k] = kv[k]
+	}
+
+	if e != nil {
+		ctx.Set(GIN_Identity, identity)
+	}
+}
+
+func SetIdentityField(ctx *gin.Context, key string, val any) {
 	identity, e := Get[map[string]any](ctx, GIN_Identity)
 	if e != nil {
 		identity = make(map[string]any, 1)
@@ -38,7 +53,22 @@ func SetIdentity(ctx *gin.Context, key string, val any) {
 	}
 }
 
-func SetData(ctx *gin.Context, key string, val any) {
+func SetData(ctx *gin.Context, kv map[string]any) {
+	data, e := Get[map[string]any](ctx, GIN_Data)
+	if e != nil {
+		data = make(map[string]any, 1)
+	}
+
+	for k := range kv {
+		data[k] = kv[k]
+	}
+
+	if e != nil {
+		ctx.Set(GIN_Data, data)
+	}
+}
+
+func SetDataField(ctx *gin.Context, key string, val any) {
 	data, e := Get[map[string]any](ctx, GIN_Data)
 	if e != nil {
 		data = make(map[string]any, 1)
@@ -73,11 +103,7 @@ func APILog(lgg *zap.Logger, name string, skip int) gin.HandlerFunc {
 			// fmt.Println("!!! 3")
 
 			// TODO: alerting
-			stacks := gotk.Stack(mod)
-			SetError(ctx, map[string]any{
-				"recover": recoverData,
-				"stacks":  stacks,
-			})
+			SetData(ctx, map[string]any{"_recover": recoverData, "_stacks": gotk.Stack(mod)})
 
 			ctx.JSON(
 				http.StatusInternalServerError,
