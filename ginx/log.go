@@ -94,7 +94,6 @@ func APILog(lgg *zap.Logger, name string, skip int) gin.HandlerFunc {
 func apiLogEnd(ctx *gin.Context, start time.Time, msg string, logger *zap.Logger) {
 	var (
 		statusCode int
-		latency    string
 		fields     []zap.Field
 	)
 
@@ -110,7 +109,7 @@ func apiLogEnd(ctx *gin.Context, start time.Time, msg string, logger *zap.Logger
 	statusCode = ctx.Writer.Status()
 	fields = append(fields, zap.Int("status_code", statusCode))
 
-	latency = fmt.Sprintf("%fms", float64(time.Since(start).Microseconds())/1e3)
+	latency := fmt.Sprintf("%fms", float64(time.Since(start).Microseconds())/1e3)
 	push("latency", latency)
 
 	if identity, e := Get[map[string]any](ctx, GIN_Identity); e == nil {
