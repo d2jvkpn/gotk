@@ -113,6 +113,8 @@ func APILog(lgg *zap.Logger, name string, skip int) gin.HandlerFunc {
 		}()
 
 		ctx.Next()
+
+		// TODO: timeout check
 		apiLogEnd(ctx, start, msg, logger)
 	}
 }
