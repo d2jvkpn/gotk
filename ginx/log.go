@@ -29,27 +29,11 @@ func SetIdentity(ctx *gin.Context, kv map[string]any) {
 	identity, e := Get[map[string]any](ctx, GIN_Identity)
 	if e != nil {
 		identity = make(map[string]any, 1)
+		ctx.Set(GIN_Identity, identity)
 	}
 
 	for k := range kv {
 		identity[k] = kv[k]
-	}
-
-	if e != nil {
-		ctx.Set(GIN_Identity, identity)
-	}
-}
-
-func SetIdentityField(ctx *gin.Context, key string, val any) {
-	identity, e := Get[map[string]any](ctx, GIN_Identity)
-	if e != nil {
-		identity = make(map[string]any, 1)
-	}
-
-	identity[key] = val
-
-	if e != nil {
-		ctx.Set(GIN_Identity, identity)
 	}
 }
 
@@ -57,26 +41,11 @@ func SetData(ctx *gin.Context, kv map[string]any) {
 	data, e := Get[map[string]any](ctx, GIN_Data)
 	if e != nil {
 		data = make(map[string]any, 1)
+		ctx.Set(GIN_Data, data)
 	}
 
 	for k := range kv {
 		data[k] = kv[k]
-	}
-
-	if e != nil {
-		ctx.Set(GIN_Data, data)
-	}
-}
-
-func SetDataField(ctx *gin.Context, key string, val any) {
-	data, e := Get[map[string]any](ctx, GIN_Data)
-	if e != nil {
-		data = make(map[string]any, 1)
-	}
-
-	data[key] = val
-	if e != nil {
-		ctx.Set(GIN_Data, data)
 	}
 }
 
