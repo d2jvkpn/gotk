@@ -7,8 +7,8 @@ import (
 const (
 	GIN_RequestId = "GIN_RequestId"
 	GIN_Error     = "GIN_Error"
-	GIN_Identity  = "GIN_Identity"
-	GIN_Data      = "GIN_Data"
+	GIN_Identity  = "GIN_Identity" // string
+	GIN_Data      = "GIN_Data"     // map[string]any
 )
 
 func SetRequestId(ctx *gin.Context, requestId string) {

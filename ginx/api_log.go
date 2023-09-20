@@ -60,9 +60,9 @@ func apiLogEnd(ctx *gin.Context, start time.Time, msg string, logger *zap.Logger
 		fields = append(fields, zap.String(key, field))
 	}
 
-	push("request_id", ctx.GetString(GIN_RequestId))
 	push("ip", ctx.ClientIP())
 	push("query", ctx.Request.URL.RawQuery)
+	push("request_id", ctx.GetString(GIN_RequestId))
 
 	statusCode = ctx.Writer.Status()
 	fields = append(fields, zap.Int("status_code", statusCode))
@@ -70,7 +70,7 @@ func apiLogEnd(ctx *gin.Context, start time.Time, msg string, logger *zap.Logger
 	latency := fmt.Sprintf("%fms", float64(time.Since(start).Microseconds())/1e3)
 	push("latency", latency)
 
-	if identity, e := Get[map[string]any](ctx, GIN_Identity); e == nil {
+	if identity, e := Get[map[string]string](ctx, GIN_Identity); e == nil {
 		fields = append(fields, zap.Any("identity", identity))
 	}
 
