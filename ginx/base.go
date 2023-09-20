@@ -19,10 +19,10 @@ func SetError(ctx *gin.Context, err any) {
 	ctx.Set(GIN_Error, err)
 }
 
-func SetIdentity(ctx *gin.Context, kv map[string]any) {
-	identity, e := Get[map[string]any](ctx, GIN_Identity)
+func SetIdentity(ctx *gin.Context, kv map[string]string) {
+	identity, e := Get[map[string]string](ctx, GIN_Identity)
 	if e != nil {
-		identity = make(map[string]any, 1)
+		identity = make(map[string]string, 1)
 		ctx.Set(GIN_Identity, identity)
 	}
 
