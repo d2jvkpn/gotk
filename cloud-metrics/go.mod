@@ -1,6 +1,6 @@
 module github.com/d2jvkpn/gotk/cloud-metrics
 
-go 1.20
+go 1.21
 
 require (
 	github.com/d2jvkpn/gotk v0.0.0-20230607124326-189a26bff1fb
