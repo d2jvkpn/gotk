@@ -124,3 +124,10 @@ func PprofHandlerFuncs() map[string]http.HandlerFunc {
 
 	return funcs
 }
+
+func PprofFuncKeys() []string {
+	return []string{
+		"", "allocs", "block", "cmdline", "expvar", "goroutine", "heap", "mutex",
+		"profile", "symbol", "threadcreate", "trace",
+	}
+}

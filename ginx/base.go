@@ -19,26 +19,26 @@ func SetError(ctx *gin.Context, err any) {
 	ctx.Set(GIN_Error, err)
 }
 
-func SetIdentity(ctx *gin.Context, kv map[string]string) {
+func SetIdentity(ctx *gin.Context, kvs map[string]string) {
 	identity, e := Get[map[string]string](ctx, GIN_Identity)
 	if e != nil {
 		identity = make(map[string]string, 1)
 		ctx.Set(GIN_Identity, identity)
 	}
 
-	for k := range kv {
-		identity[k] = kv[k]
+	for k := range kvs {
+		identity[k] = kvs[k]
 	}
 }
 
-func SetData(ctx *gin.Context, kv map[string]any) {
+func SetData(ctx *gin.Context, kvs map[string]any) {
 	data, e := Get[map[string]any](ctx, GIN_Data)
 	if e != nil {
 		data = make(map[string]any, 1)
 		ctx.Set(GIN_Data, data)
 	}
 
-	for k := range kv {
-		data[k] = kv[k]
+	for k := range kvs {
+		data[k] = kvs[k]
 	}
 }

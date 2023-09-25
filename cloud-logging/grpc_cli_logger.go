@@ -27,7 +27,7 @@ func (inte *GrpcCliLogger) Unary() grpc.UnaryClientInterceptor {
 		ctx context.Context, method string, req, reply any,
 		cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption,
 	) (err error) {
-		// TODO:
+
 		return invoker(inte.attach(ctx), method, req, reply, cc, opts...)
 	}
 }
@@ -37,7 +37,7 @@ func (inte *GrpcCliLogger) Stream() grpc.StreamClientInterceptor {
 		ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn,
 		method string, streamer grpc.Streamer, opts ...grpc.CallOption,
 	) (client grpc.ClientStream, err error) {
-		// TODO:
+
 		return streamer(inte.attach(ctx), desc, cc, method, opts...)
 	}
 }

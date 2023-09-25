@@ -79,7 +79,7 @@ func HttpMetrics(vp *viper.Viper, meta map[string]any, opts ...func(*http.Server
 	})
 
 	if enableProm {
-		router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+		router.GET("/prometheus", gin.WrapH(promhttp.Handler()))
 	}
 
 	if enableDebug {
@@ -89,8 +89,8 @@ func HttpMetrics(vp *viper.Viper, meta map[string]any, opts ...func(*http.Server
 			ctx.JSON(http.StatusOK, meta)
 		})
 
-		for k, f := range gotk.PprofHandlerFuncs() {
-			debug.GET(fmt.Sprintf("/pprof/%s", k), gin.WrapF(f))
+		for k, fn := range gotk.PprofHandlerFuncs() {
+			debug.GET(fmt.Sprintf("/pprof/%s", k), gin.WrapF(fn))
 		}
 	}
 
@@ -127,18 +127,18 @@ func HttpMetrics(vp *viper.Viper, meta map[string]any, opts ...func(*http.Server
 
 // https://prometheus.io/docs/prometheus/latest/querying/examples/
 // https://robert-scherbarth.medium.com/measure-request-duration-with-prometheus-and-golang-adc6f4ca05fe
-func PromMetrics() (hf gin.HandlerFunc, err error) {
+func PromMetrics(sub, name string) (hf gin.HandlerFunc, err error) {
 	requestsTotal := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Subsystem: "http",
-		Name:      "http_requests_total",
-		Help:      "Total number of HTTP requests",
+		Subsystem: sub,
+		Name:      name + "_total",
+		Help:      "Total number of " + sub,
 	}, []string{"status"})
 
 	// promauto.NewHistogramVec
 	requestsDuration := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Subsystem: "http",
-		Name:      "http_requests_duration",
-		Help:      "Request duration(milliseconds) of HTTP requests",
+		Subsystem: sub,
+		Name:      name + "_duration",
+		Help:      "Durations(milliseconds) of " + sub,
 		Buckets:   prometheus.DefBuckets,
 	})
 
@@ -152,9 +152,9 @@ func PromMetrics() (hf gin.HandlerFunc, err error) {
 	*/
 
 	inflight := prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: "http",
-		Name:      "http_requests_inflight",
-		Help:      "Total inflight of HTTP requests",
+		Subsystem: sub,
+		Name:      name + "_inflight",
+		Help:      "Inflights of " + sub,
 	})
 
 	if err = prometheus.Register(requestsTotal); err != nil {
