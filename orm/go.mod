@@ -3,8 +3,10 @@ module github.com/d2jvkpn/gotk/orm
 go 1.21
 
 require (
+	github.com/go-sql-driver/mysql v1.7.0
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/jackc/pgconn v1.14.1
+	gorm.io/driver/mysql v1.5.1
 	gorm.io/driver/postgres v1.4.5
 	gorm.io/gorm v1.25.4
 )
