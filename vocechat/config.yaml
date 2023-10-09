@@ -1,0 +1,20 @@
+vocechat_user:
+  server: https://vocechat.Your.Domain
+  username: Admin
+  email: admin@Your.Domain
+  password: "xxxxyyyy"
+  send_to_id: 2
+  send_to_name: Alice
+  send_to_kind: user
+  timeout: 5
+  tls_skip_verify: true
+
+vocechat_bot:
+  server: https://vocechat.Your.Domain
+  username: bot01
+  api_key: The_Api_Key
+  send_to_id: 3
+  send_to_name: Bob
+  send_to_kind: group
+  timeout: 5
+  tls_skip_verify: true

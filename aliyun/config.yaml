@@ -1,0 +1,9 @@
+aliyun_oss:
+  access_key_id: xxxxxxxx
+  access_key_secret: yyyyyyyy
+  bucket: BUCKET
+  region: cn-shanghai
+  site: https://example.com
+  # STS only
+  role_arn: acs:ram::12345678:role/ROLE_NAME
+  duration_seconds: 3600

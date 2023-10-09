@@ -1,0 +1,8 @@
+aws_s3:
+  access_key_id: xxxxxxxx
+  secrete_access_key: yyyyyyyyyyyyyyyy
+  region: REGION
+  bucket: BUCKET
+  # STS only
+  assume_arn: arn:aws:iam::12345678:role/ROLE_NAME
+  duration_seconds: 3600
