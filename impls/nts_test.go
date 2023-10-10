@@ -1,4 +1,4 @@
-package gotk
+package impls
 
 import (
 	"testing"

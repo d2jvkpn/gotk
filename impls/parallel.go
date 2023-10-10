@@ -1,4 +1,4 @@
-package gotk
+package impls
 
 import (
 	// "fmt"
@@ -11,7 +11,7 @@ type Parallel struct {
 }
 
 func NewParallel(n int) (p *Parallel) {
-	if n == 0 {
+	if n <= 0 {
 		n = runtime.NumCPU()
 	}
 
