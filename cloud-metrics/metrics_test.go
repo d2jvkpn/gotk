@@ -6,7 +6,7 @@ import (
 )
 
 func TestMetrics(t *testing.T) {
-	_, err := PromMetrics()
+	_, err := PromMetrics("a", "b")
 	if err != nil {
 		t.Fatal(err)
 	}

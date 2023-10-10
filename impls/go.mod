@@ -3,6 +3,7 @@ module github.com/d2jvkpn/gotk/impls
 go 1.21.2
 
 require (
+	github.com/d2jvkpn/gotk v0.0.0-20231010013458-4692a2feec03
 	github.com/spf13/viper v1.17.0
 	github.com/tidwall/gjson v1.17.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
@@ -26,6 +27,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
+	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

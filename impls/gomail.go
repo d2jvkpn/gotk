@@ -3,6 +3,7 @@ package impls
 import (
 	"net/mail"
 
+	"github.com/d2jvkpn/gotk"
 	"gopkg.in/gomail.v2"
 )
 
@@ -10,7 +11,7 @@ func NewSender(fp, field string) (sender *Sender, err error) {
 	sender = new(Sender)
 	objects := map[string]any{"sender": sender}
 
-	if err = UnmarshalYamlObjects(fp, objects); err != nil {
+	if err = gotk.UnmarshalYamlObjects(fp, objects); err != nil {
 		return nil, err
 	}
 
