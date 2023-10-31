@@ -25,16 +25,16 @@ func (result PageResult[T]) Map() map[string]any {
 }
 
 // vector
-type GormVector[T any] []T // T should marshalable
+type Vector[T any] []T // T should marshalable
 
-func (vec *GormVector[T]) Scan(value any) (err error) {
+func (vec *Vector[T]) Scan(value any) (err error) {
 	bts, ok := value.([]byte)
 	if !ok {
 		return fmt.Errorf("failed to unmarshal JSONB value: %v", value)
 	}
 	bts = bytes.TrimSpace(bts)
 
-	result := make(GormVector[T], 0, 5)
+	result := make(Vector[T], 0, 5)
 	if len(bts) > 0 { // empty []uint8 cause error
 		err = json.Unmarshal(bts, &result)
 	}
@@ -43,21 +43,21 @@ func (vec *GormVector[T]) Scan(value any) (err error) {
 	return err
 }
 
-func (vec GormVector[T]) Value() (driver.Value, error) {
+func (vec Vector[T]) Value() (driver.Value, error) {
 	return json.Marshal(vec)
 }
 
 // dict
-type GormDict[T any] map[string]T
+type Hashmap[T any] map[string]T
 
-func (dict *GormDict[T]) Scan(value any) (err error) {
+func (dict *Hashmap[T]) Scan(value any) (err error) {
 	bts, ok := value.([]byte)
 	if !ok {
 		return fmt.Errorf("failed to unmarshal JSONB value: %v", value)
 	}
 	bts = bytes.TrimSpace(bts)
 
-	result := make(GormDict[T], 5)
+	result := make(Hashmap[T], 5)
 	if len(bts) > 0 { // empty []uint8 causes error
 		err = json.Unmarshal(bts, &result)
 	}
@@ -66,6 +66,6 @@ func (dict *GormDict[T]) Scan(value any) (err error) {
 	return err
 }
 
-func (dict GormDict[T]) Value() (driver.Value, error) {
+func (dict Hashmap[T]) Value() (driver.Value, error) {
 	return json.Marshal(dict)
 }

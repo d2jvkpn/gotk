@@ -19,13 +19,13 @@ func MultiEquals[T comparable](tx *gorm.DB, field string, values []T) *gorm.DB {
 	wheres, items := make([]string, 0), make([]any, 0)
 	unique := make(map[T]bool, len(values))
 
-	for i := range values {
-		if unique[values[i]] {
+	for _, k := range values {
+		if unique[k] {
 			continue
 		}
 		wheres = append(wheres, fmt.Sprintf("%s = ?", field))
-		items = append(items, values[i])
-		unique[values[i]] = true
+		items = append(items, k)
+		unique[k] = true
 	}
 
 	if len(wheres) == 0 {
