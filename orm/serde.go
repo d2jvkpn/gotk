@@ -18,7 +18,7 @@ func NewPageResult[T any]() *PageResult[T] {
 	return &PageResult[T]{Items: make([]T, 0)}
 }
 
-func (result PageResult[T]) Map() map[string]any {
+func (result PageResult[T]) AsMap() map[string]any {
 	return map[string]any{
 		"total": result.Total, "items": result.Items,
 	}

@@ -11,11 +11,10 @@ func TestParallel(t *testing.T) {
 
 	for i := 0; i < 16; i++ {
 		i := i
-		p.Do(func() error {
+		p.Do(func() {
 			fmt.Printf(">>> %d, %s\n", i, time.Now().Format(time.RFC3339))
 			time.Sleep(time.Second)
-			return nil
-		}, nil)
+		})
 	}
 
 	p.Wait()

@@ -25,6 +25,7 @@ func MigratePsqlFromDir(dsn, migrations string) (err error) {
 	if db, err = sql.Open("postgres", dsn); err != nil {
 		return fmt.Errorf("sql.Open: %w", err)
 	}
+	defer db.Close()
 
 	if driver, err = postgres.WithInstance(db, &postgres.Config{}); err != nil {
 		return fmt.Errorf("postgres.WithInstance: %w", err)

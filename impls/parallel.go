@@ -21,16 +21,20 @@ func NewParallel(n int) (p *Parallel) {
 	}
 }
 
-func (p *Parallel) Do(fn func() error, handle func(error)) {
-	if p.i++; p.i > p.n {
+// func (p *Parallel) Do(fn func() error, handle func(error)) {
+func (p *Parallel) Do(fn func()) {
+	if p.i += 1; p.i > p.n { // avoid creating too many goroutines
 		<-p.done
-		p.i--
+		p.i -= 1
 	}
 
 	go func() {
-		if err := fn(); err != nil && handle != nil {
-			handle(err)
-		}
+		/*
+			if err := fn(); err != nil && handle != nil {
+				handle(err)
+			}
+		*/
+		fn()
 		p.done <- struct{}{}
 	}()
 }
