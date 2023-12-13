@@ -34,6 +34,10 @@ func ParsePorts(str string) (ports []uint64, err error) {
 			}
 		}
 
+		if p1 > p2 {
+			p1, p2 = p2, p1
+		}
+
 		for p := p1; p <= p2; p++ {
 			ports = append(ports, p)
 		}
