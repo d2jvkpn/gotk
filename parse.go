@@ -7,7 +7,7 @@ import (
 )
 
 // parse ports from string: 8000,8001,8002-8009
-func ParsePortsRange(str string) (ports []uint64, err error) {
+func ParsePorts(str string) (ports []uint64, err error) {
 	var (
 		p1, p2 uint64
 		strs   []string
