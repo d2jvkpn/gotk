@@ -39,7 +39,7 @@ func (ctx *HttpContext) GetData() map[string]any {
 	return data
 }
 
-func middlewareHandler(origin string, next http.Handler) http.Handler {
+func MiddlewareHandler(origin string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -61,7 +61,7 @@ func middlewareHandler(origin string, next http.Handler) http.Handler {
 	})
 }
 
-func middlewareFunc(origin string, hf http.HandlerFunc) http.HandlerFunc {
+func MiddlewareFunc(origin string, hf http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
