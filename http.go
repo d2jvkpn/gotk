@@ -14,10 +14,7 @@ func NewHttpContext(key string, r *http.Request) *HttpContext {
 	ctx := context.WithValue(r.Context(), key, make(map[string]any, 0))
 	*r = *(r.WithContext(ctx))
 
-	return &HttpContext{
-		key:     key,
-		Request: r,
-	}
+	return &HttpContext{key: key, Request: r}
 }
 
 func (ctx *HttpContext) Set(key string, value any) bool {
@@ -28,7 +25,7 @@ func (ctx *HttpContext) Set(key string, value any) bool {
 	return ok
 }
 
-func (ctx *HttpContext) Get(key string) (any, bool) {
+func (ctx *HttpContext) GetValue(key string) (any, bool) {
 	data, _ := ctx.Request.Context().Value(ctx.key).(map[string]any)
 	value, ok := data[key]
 	return value, ok
