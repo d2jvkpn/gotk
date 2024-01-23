@@ -103,8 +103,8 @@ func Test04_AsError(t *testing.T) {
 		t.Fatal(fmt.Errorf("assert failed"))
 	} else {
 		fmt.Printf(
-			"==> type *Error: is_error=%t, cause=%v, code=%q\n",
-			e.IsErr(), e.GetCause(), e.GetCode(),
+			"==> type *Error:\n    string=%s\n    trace=%s\n    is_error=%t, cause=%v, code=%q\n",
+			e, e.Trace(), e.IsErr(), e.GetCause(), e.GetCode(),
 		)
 	}
 
@@ -112,8 +112,8 @@ func Test04_AsError(t *testing.T) {
 		t.Fatal(fmt.Errorf("assert failed"))
 	} else {
 		fmt.Printf(
-			"==> interface Err: is_error=%t, cause=%v, code=%q\n",
-			e.IsErr(), e.GetCause(), e.GetCode(),
+			"==> interface Err:\n    string=%s\n    is_error=%t, cause=%v, code=%q\n",
+			e, e.IsErr(), e.GetCause(), e.GetCode(),
 		)
 	}
 }
