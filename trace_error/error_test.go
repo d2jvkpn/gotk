@@ -94,13 +94,13 @@ func Test03(t *testing.T) {
 func Test04_AsError(t *testing.T) {
 	var err error
 
-	err = newError()
+	err = anError()
 	if err == nil {
 		t.Fatal(fmt.Errorf("shouldn't be nil"))
 	}
 
 	if e, ok := err.(*Error); !ok {
-		t.Fatal(fmt.Errorf("assert failed"))
+		t.Fatal(fmt.Errorf("assert as *Error failed"))
 	} else {
 		fmt.Printf(
 			"==> type *Error:\n    string=%s\n    trace=%s\n    is_error=%t, cause=%v, code=%q\n",
@@ -109,7 +109,7 @@ func Test04_AsError(t *testing.T) {
 	}
 
 	if e, ok := err.(Err); !ok {
-		t.Fatal(fmt.Errorf("assert failed"))
+		t.Fatal(fmt.Errorf("assert as Err failed"))
 	} else {
 		fmt.Printf(
 			"==> interface Err:\n    string=%s\n    is_error=%t, cause=%v, code=%q\n",
@@ -118,6 +118,6 @@ func Test04_AsError(t *testing.T) {
 	}
 }
 
-func newError() *Error {
+func anError() *Error {
 	return NewError(errors.New("wrong"), 42, "e0001")
 }
