@@ -9,6 +9,6 @@ type Err interface {
 	// IsNil() bool
 	IsErr() bool
 
-	GetCasue() error
+	GetCause() error
 	GetCode() string
 }

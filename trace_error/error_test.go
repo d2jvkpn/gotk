@@ -1,6 +1,7 @@
 package trace_error
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 )
@@ -88,4 +89,35 @@ func Test03(t *testing.T) {
 	fmt.Println(err.Describe())
 	err.Retrace()
 	fmt.Println(err.Describe())
+}
+
+func Test04_AsError(t *testing.T) {
+	var err error
+
+	err = newError()
+	if err == nil {
+		t.Fatal(fmt.Errorf("shouldn't be nil"))
+	}
+
+	if e, ok := err.(*Error); !ok {
+		t.Fatal(fmt.Errorf("assert failed"))
+	} else {
+		fmt.Printf(
+			"==> type *Error: is_error=%t, cause=%v, code=%q\n",
+			e.IsErr(), e.GetCause(), e.GetCode(),
+		)
+	}
+
+	if e, ok := err.(Err); !ok {
+		t.Fatal(fmt.Errorf("assert failed"))
+	} else {
+		fmt.Printf(
+			"==> interface Err: is_error=%t, cause=%v, code=%q\n",
+			e.IsErr(), e.GetCause(), e.GetCode(),
+		)
+	}
+}
+
+func newError() *Error {
+	return NewError(errors.New("wrong"), 42, "e0001")
 }
