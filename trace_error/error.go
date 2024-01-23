@@ -24,78 +24,76 @@ type Error struct {
 type ErrorOption func(*Error)
 
 func Msg(msg string) ErrorOption {
-	return func(e *Error) {
-		e.Msg = msg
+	return func(self *Error) {
+		self.Msg = msg
 	}
 }
 
 func Skip(skip int) ErrorOption {
-	return func(e *Error) {
-		e.Skip = skip
+	return func(self *Error) {
+		self.Skip = skip
 	}
 }
 
 func NoTrace() ErrorOption {
-	return func(e *Error) {
-		e.Skip = -1
+	return func(self *Error) {
+		self.Skip = -1
 	}
 }
 
-func NewError(cause error, codeInt int, codeStr string, opts ...ErrorOption) (err *Error) {
+func NewError(cause error, codeInt int, codeStr string, opts ...ErrorOption) (self *Error) {
 	if cause == nil {
 		return nil
 	}
 
-	err = &Error{Cause: cause, CodeInt: codeInt, CodeStr: codeStr, Msg: "...", Skip: 1}
-	for _, v := range opts {
-		v(err)
+	self = &Error{Cause: cause, CodeInt: codeInt, CodeStr: codeStr, Msg: "...", Skip: 1}
+	for _, opt := range opts {
+		opt(self)
 	}
 
-	if err.Skip <= 0 {
-		return err
+	if self.Skip <= 0 {
+		return self
 	}
 
-	fn, file, line, ok := runtime.Caller(err.Skip)
+	fn, file, line, ok := runtime.Caller(self.Skip)
 	if !ok {
-		return err
+		return self
 	}
 
-	err.Line = line
-	err.Fn = runtime.FuncForPC(fn).Name()
-	err.File = filepath.Base(file)
+	self.Line = line
+	self.Fn = runtime.FuncForPC(fn).Name()
+	self.File = filepath.Base(file)
 
-	return err
+	return self
 }
 
-func (err *Error) Retrace() *Error {
+func (self *Error) Retrace() *Error {
 	fn, file, line, ok := runtime.Caller(1)
 	if !ok {
-		return err
+		return self
 	}
 
-	err.Skip = 1
-	err.Line = line
-	err.Fn = runtime.FuncForPC(fn).Name()
-	err.File = filepath.Base(file)
+	self.Skip = 1
+	self.Line = line
+	self.Fn = runtime.FuncForPC(fn).Name()
+	self.File = filepath.Base(file)
 
-	return err
+	return self
 }
 
-/*
-func (err *Error) Error() string {
+func (self *Error) Error() string {
 	return fmt.Sprintf(
 		"cause: %q, code_int: %d, code_str: %q, msg: %q",
-		err.Cause.Error(), err.CodeInt, err.CodeStr, err.Msg,
+		self.Cause.Error(), self.CodeInt, self.CodeStr, self.Msg,
 	)
 }
-*/
 
-func (err *Error) XCause(e error) *Error {
+func (self *Error) XCause(e error) *Error {
 	if e == nil {
-		return err
+		return self
 	}
-	err.Cause = e
-	return err
+	self.Cause = e
+	return self
 }
 
 func (err *Error) XMsg(msg string) *Error {
@@ -103,35 +101,51 @@ func (err *Error) XMsg(msg string) *Error {
 	return err
 }
 
-func (err *Error) XCode(codeInt int) *Error {
-	err.CodeInt = codeInt
-	return err
+func (self *Error) XCode(codeInt int) *Error {
+	self.CodeInt = codeInt
+	return self
 }
 
-func (err *Error) String() string {
+func (self *Error) String() string {
 	return fmt.Sprintf(
 		"cause=%q, code_int=%d, code_str=%q, msg=%q",
-		err.Cause.Error(), err.CodeInt, err.CodeStr, err.Msg,
+		self.Cause.Error(), self.CodeInt, self.CodeStr, self.Msg,
 	)
 }
 
-func (err *Error) Trace() string {
-	if err.Fn == "" {
+func (self *Error) Trace() string {
+	if self.Fn == "" {
 		return ""
 	}
 
 	return fmt.Sprintf(
 		"fn=%q, file=%q, line=%d, skip=%d",
-		err.Fn, err.File, err.Line, err.Skip,
+		self.Fn, self.File, self.Line, self.Skip,
 	)
 }
 
-func (err *Error) Describe() string {
-	str := err.String()
-	trace := err.Trace()
+func (self *Error) Describe() string {
+	str := self.String()
+	trace := self.Trace()
 
 	if trace == "" {
 		return str
 	}
 	return fmt.Sprintf("%s; %s", str, trace)
+}
+
+func (self *Error) IsNil() bool {
+	return self == nil
+}
+
+func (self *Error) IsErr() bool {
+	return self != nil
+}
+
+func (self *Error) GetCause() error {
+	return self.Cause
+}
+
+func (self *Error) GetCode() string {
+	return self.CodeStr
 }

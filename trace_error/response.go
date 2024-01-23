@@ -20,26 +20,26 @@ func (res *Response) MarshalJSON() ([]byte, error) {
 }
 */
 
-func (res *Response) XRequestId(requestId string) *Response {
-	res.RequestId = requestId
-	return res
+func (self *Response) XRequestId(requestId string) *Response {
+	self.RequestId = requestId
+	return self
 }
 
 func RequestId(requestId string) ResponseOption {
-	return func(res *Response) {
-		res.RequestId = requestId
+	return func(self *Response) {
+		self.RequestId = requestId
 	}
 }
 
 func NewResponse(data any, opts ...ResponseOption) Response {
-	res := Response{Code: "ok", Msg: "ok", Data: data}
+	self := Response{Code: "ok", Msg: "ok", Data: data}
 
 	for _, opt := range opts {
-		opt(&res)
+		opt(&self)
 	}
 
-	if res.Data == nil {
-		res.Data = map[string]any{}
+	if self.Data == nil {
+		self.Data = map[string]any{}
 	}
 
 	/*
@@ -50,13 +50,13 @@ func NewResponse(data any, opts ...ResponseOption) Response {
 		}
 	*/
 
-	return res
+	return self
 }
 
-func (err *Error) IntoResponse(opts ...ResponseOption) Response {
+func (self *Error) IntoResponse(opts ...ResponseOption) Response {
 	res := Response{
-		Code: err.CodeStr,
-		Msg:  err.Msg,
+		Code: self.CodeStr,
+		Msg:  self.Msg,
 	}
 
 	for _, opt := range opts {
