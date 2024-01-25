@@ -9,6 +9,8 @@ import (
 
 func LoadYamlConfig(fp, name string) (vp *viper.Viper, err error) {
 	vp = viper.New()
+	vp.SetConfigType("yaml")
+
 	vp.SetConfigName(name)
 	vp.SetConfigFile(fp)
 

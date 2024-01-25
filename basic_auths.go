@@ -47,11 +47,12 @@ func (auth *BasicAuths) Validate() (err error) {
 	}
 
 	auth.users = make(map[string]*BasicAuthUser, len(auth.Users))
-	for _, user := range auth.Users {
+	for i := range auth.Users {
+		user := &auth.Users[i]
 		if user.Username == "" || user.Password == "" {
 			return fmt.Errorf("invalid element exists in users")
 		}
-		auth.users[user.Username] = &user
+		auth.users[user.Username] = user
 	}
 
 	return nil
@@ -87,6 +88,7 @@ func (auth *BasicAuths) Handle(w http.ResponseWriter, r *http.Request) (
 	}
 
 	u, p, found := bytes.Cut(key, []byte{':'})
+	// println("~~~", string(key), string(u), string(p))
 	if !found {
 		return nil, "invalid_token", fmt.Errorf("invalid token")
 	}
@@ -95,9 +97,11 @@ func (auth *BasicAuths) Handle(w http.ResponseWriter, r *http.Request) (
 	if auth.Method == "md5" {
 		md5sum := fmt.Sprintf("%x", md5.Sum(key))
 		if user, ok = auth.users[string(u)]; !ok {
+			// println("!!! md5 incorrect_username:", u)
 			return u2, "incorrect_username", fmt.Errorf("incorrect username or password")
 		}
 		if md5sum != user.Password {
+			// println("!!! md5 incorrect_password:", string(p), md5sum, user.Password)
 			return u2, "incorrect_password", fmt.Errorf("incorrect username or password")
 		}
 		return u2, "md5", nil
@@ -106,10 +110,12 @@ func (auth *BasicAuths) Handle(w http.ResponseWriter, r *http.Request) (
 	// auth.Method == "bcrypt"
 	if user, ok = auth.users[string(u)]; !ok {
 		_ = bcrypt.CompareHashAndPassword([]byte(user.Password), p)
+		// println("!!! bcrypt incorrect_username:", u)
 		return u2, "incorrect_username", fmt.Errorf("incorrect username or password")
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(password), p); err != nil {
+		// println("!!! bcrypt incorrect_password:", p)
 		return u2, "incorrect_password", fmt.Errorf("incorrect username or password")
 	}
 
