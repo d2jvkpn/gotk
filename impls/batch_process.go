@@ -51,7 +51,7 @@ func NewBatchProcess[T any](count int, duration time.Duration, process func([]T)
 }
 
 func (bp *BatchProcess[T]) run() {
-	process := func() {
+	reset := func() {
 		// TODO: ?? sort bp.data
 		bp.process(bp.data) // check len(bp.data) == 0 in bp.process
 		bp.data = bp.data[:0]
@@ -63,29 +63,29 @@ LOOP:
 		case item := <-bp.recv:
 			bp.data = append(bp.data, item)
 			if len(bp.data) >= bp.count {
-				process()
+				reset()
 			}
 		case _, isOpen := <-bp.ticker.C:
 			if !isOpen {
 				break LOOP
 			}
-			process()
+			reset()
 		}
 	}
 
-	process() // always process when exit
+	reset() // always reset when exit
 }
 
 func (bp *BatchProcess[T]) Recv(v T) (err error) {
 	bp.mutex.RLock()
-	if status := bp.status; status != BP_StatusRunning {
+	if bp.status != BP_StatusRunning {
 		bp.mutex.RUnlock()
-		return fmt.Errorf("unexpected status: %d", status)
+		return fmt.Errorf("unexpected status: %d", bp.status)
 	}
 	bp.mutex.RUnlock()
 
 	bp.wg.Add(1)
-	// go func() { ... } // will cause the app to take up too much memory
+	// go func() { ... } // create too many goroutines will take up too much memory
 	bp.recv <- v
 	bp.wg.Done()
 
