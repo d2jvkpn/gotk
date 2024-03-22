@@ -7,8 +7,8 @@ replace github.com/d2jvkpn/gotk => ../
 replace github.com/d2jvkpn/gotk/ginx => ../ginx
 
 require (
-	github.com/d2jvkpn/gotk v0.0.0-20240307030639-b3bdd80a36e6
-	github.com/d2jvkpn/gotk/ginx v0.0.0-20240307030639-b3bdd80a36e6
+	github.com/d2jvkpn/gotk v0.0.0-00010101000000-000000000000
+	github.com/d2jvkpn/gotk/ginx v0.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.9.1
 	github.com/prometheus/client_golang v1.19.0
 	github.com/spf13/viper v1.18.2
