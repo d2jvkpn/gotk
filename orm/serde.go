@@ -19,9 +19,7 @@ func NewPageResult[T any]() *PageResult[T] {
 }
 
 func (result PageResult[T]) AsMap() map[string]any {
-	return map[string]any{
-		"total": result.Total, "items": result.Items,
-	}
+	return map[string]any{"total": result.Total, "items": result.Items}
 }
 
 // vector
