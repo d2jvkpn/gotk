@@ -37,11 +37,11 @@ func ConnectMySQL(dsn string, debugMode bool) (db *gorm.DB, err error) {
 }
 
 // errors
-func MySQLIsNotFound(err error) bool {
+func IsMySQLIsNotFound(err error) bool {
 	return errors.Is(err, gorm.ErrRecordNotFound)
 }
 
-func MySQLDuplicateEntry(err error) bool {
+func IsMySQLDuplicateEntry(err error) bool {
 	sqlErr, ok := err.(*gomysql.MySQLError)
 	return ok && sqlErr.Number == uint16(1062)
 }

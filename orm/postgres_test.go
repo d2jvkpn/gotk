@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx"
 )
 
 func TestPgError(t *testing.T) {
-	var err error = new(pgconn.PgError)
+	var err error = new(pgx.PgError)
 
 	fmt.Printf("~~~ err: %#+[1]v, type: %[1]T\n", err)
 
-	e, ok := err.(*pgconn.PgError)
+	e, ok := err.(*pgx.PgError)
 	fmt.Printf("~~~ ok: %t, e: %#+v\n", ok, e)
 }

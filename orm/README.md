@@ -1,10 +1,12 @@
 ### Title
 ---
 
-#### chapter01
-keep version of gorm.io/driver/postgres in v1.4.5, don't upgrade to 1.5.0
+#### P01
+https://github.com/go-gorm/gorm/issues/4135 keep version of gorm.io/driver/postgres in v1.4.5, don't
+upgrade to 1.5.0
 
-#### chapter02: migration
+
+#### P02: migration
 ```bash
 go install -tags 'postgres mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 

@@ -4,7 +4,7 @@ import (
 	// "fmt"
 	// "strings"
 
-	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -43,15 +43,15 @@ func PgConnect(dsn string, debugMode bool) (db *gorm.DB, err error) {
 //	and errors.Is(e, gorm.ErrDuplicatedKey) doesn't work as expected
 //
 // PgUniqueViolation
-func PgDuplicatedKey(err error) bool {
+func IsPgDuplicatedKey(err error) bool {
 	// fmt.Printf("~~~ err: %[1]s\n    %#+[1]v, type: %[1]T\n", err)
-	e, ok := err.(*pgconn.PgError)
+	e, ok := err.(*pgx.PgError)
 	// fmt.Printf("~~~ e: %v, ok: %t\n", e, ok)
 	return ok && e.Code == "23505"
 
 	/*
 		switch err.(type) {
-		case *pgconn.PgError:
+		case *pgx.PgError:
 			return true
 		default:
 			return false
@@ -61,6 +61,6 @@ func PgDuplicatedKey(err error) bool {
 	// return strings.Contains(err.Error(), "(SQLSTATE 23505)")
 }
 
-func PgRecordNotFound(err error) bool {
+func IsPgRecordNotFound(err error) bool {
 	return err.Error() == "record not found"
 }
