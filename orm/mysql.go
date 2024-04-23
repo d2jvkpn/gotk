@@ -15,7 +15,7 @@ MySQL initialize
 
 	dsn format: {USERANME}:{PASSWORD}@tcp({IP})/{DATABASE}?charset=utf8mb4&parseTime=True&loc=Local
 */
-func ConnectMySQL(dsn string, debugMode bool) (db *gorm.DB, err error) {
+func GormMySQConnectL(dsn string, debug bool) (db *gorm.DB, err error) {
 	conf := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{SingularTable: true},
 	}
@@ -23,7 +23,7 @@ func ConnectMySQL(dsn string, debugMode bool) (db *gorm.DB, err error) {
 	if db, err = gorm.Open(mysql.Open(dsn), conf); err != nil {
 		return nil, err
 	}
-	if debugMode {
+	if debug {
 		db = db.Debug()
 	}
 	/*
@@ -37,11 +37,11 @@ func ConnectMySQL(dsn string, debugMode bool) (db *gorm.DB, err error) {
 }
 
 // errors
-func IsMySQLIsNotFound(err error) bool {
+func GormMySQLIsNotFound(err error) bool {
 	return errors.Is(err, gorm.ErrRecordNotFound)
 }
 
-func IsMySQLDuplicateEntry(err error) bool {
+func GormMySQLUniqueViolation(err error) bool {
 	sqlErr, ok := err.(*gomysql.MySQLError)
 	return ok && sqlErr.Number == uint16(1062)
 }

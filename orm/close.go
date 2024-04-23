@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CloseDB(gdb *gorm.DB) (err error) {
+func GormDBClose(gdb *gorm.DB) (err error) {
 	var db *sql.DB
 
 	if gdb == nil {

@@ -2,9 +2,9 @@ package orm
 
 import (
 	"database/sql"
+	"embed"
 	"errors"
 	"fmt"
-	"io/fs"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database"
@@ -12,10 +12,9 @@ import (
 	"github.com/golang-migrate/migrate/v4/source"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	// _ "github.com/lib/pq"
 )
 
-func MigratePsqlFromDir(dsn, migrations string) (err error) {
+func MigratePgDir(dsn, migrations string) (err error) {
 	var (
 		db     *sql.DB
 		driver database.Driver
@@ -55,13 +54,19 @@ func MigratePsqlFromDir(dsn, migrations string) (err error) {
 	return nil
 }
 
-func MigratePsqlFromFs(dsn string, src fs.FS) (err error) {
+/*
+//go:embed migrations/*.sql
+src embed.FS
+
+MigratePgFs(dsn, src, "migrations")
+*/
+func MigratePgFs(dsn string, src embed.FS, p string) (err error) {
 	var (
 		driver source.Driver
 		migr   *migrate.Migrate
 	)
 
-	if driver, err = iofs.New(src, "/"); err != nil {
+	if driver, err = iofs.New(src, p); err != nil {
 		return err
 	}
 
