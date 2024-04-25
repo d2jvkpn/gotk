@@ -14,7 +14,7 @@ type Field struct {
 }
 
 type HttpAPI struct {
-	Name            string        `mapstructure:"name"`
+	Title           string        `mapstructure:"title"`
 	Note            string        `mapstructure:"note"`
 	Interval        time.Duration `mapstructure:"interval"`
 	Request         string        `mapstructure:"request"` // method@path
