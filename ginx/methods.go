@@ -2,6 +2,7 @@ package ginx
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,4 +25,9 @@ func Get[T any](ctx *gin.Context, key string) (item T, err error) {
 	}
 
 	return item, nil
+}
+
+func GetDate(ctx *gin.Context) (time.Time, error) {
+	header := ctx.GetHeader("Date")
+	return time.Parse(time.RFC1123, header)
 }
