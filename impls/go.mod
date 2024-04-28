@@ -5,7 +5,7 @@ go 1.22
 replace github.com/d2jvkpn/gotk => ../
 
 require (
-	github.com/d2jvkpn/gotk v0.0.0-20240418163843-95ea66e23872
+	github.com/d2jvkpn/gotk v0.0.0-20240427140957-65545f72f1b2
 	github.com/spf13/viper v1.18.2
 	github.com/tidwall/gjson v1.17.1
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f

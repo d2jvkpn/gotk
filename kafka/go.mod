@@ -5,7 +5,7 @@ go 1.22
 replace github.com/d2jvkpn/gotk => ../
 
 require (
-	github.com/IBM/sarama v1.43.1
+	github.com/IBM/sarama v1.43.2
 	github.com/d2jvkpn/gotk v0.0.0-00010101000000-000000000000
 	github.com/spf13/viper v1.18.2
 	go.uber.org/zap v1.27.0

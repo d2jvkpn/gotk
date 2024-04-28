@@ -7,8 +7,8 @@ replace github.com/d2jvkpn/gotk => ../
 replace github.com/d2jvkpn/gotk/ginx => ../ginx
 
 require (
-	github.com/d2jvkpn/gotk v0.0.0-20240418163843-95ea66e23872
-	github.com/d2jvkpn/gotk/ginx v0.0.0-20240418163843-95ea66e23872
+	github.com/d2jvkpn/gotk v0.0.0-20240427140957-65545f72f1b2
+	github.com/d2jvkpn/gotk/ginx v0.0.0-20240427140957-65545f72f1b2
 	github.com/gin-gonic/gin v1.9.1
 	github.com/prometheus/client_golang v1.19.0
 	github.com/spf13/viper v1.18.2
@@ -16,10 +16,10 @@ require (
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/bytedance/sonic v1.11.5 // indirect
+	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudwego/base64x v0.1.3 // indirect
+	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
