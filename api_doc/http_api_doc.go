@@ -26,10 +26,13 @@ type HttpAPI struct {
 }
 
 type HttpAPIs struct {
-	Name     string `mapstructure:"name"`
-	Basepath string `mapstructure:"basepath"`
+	Name     string   `mapstructure:"name"`
+	Links    []string `mapstructure:"links"`
+	Basepath string   `mapstructure:"basepath"`
 	public   struct {
-		Headers []Field // without subfield Type
+		Headers []Field `mapstructure:"headers"` // without subfield Type
+		Body    []Field `mapstructure:"body"`
 	} `mapstructure:"public"`
-	List []HttpAPI `mapstructure:"list"`
+	Signature string    `mapstructure:"signature"` // TODO:
+	List      []HttpAPI `mapstructure:"list"`
 }
