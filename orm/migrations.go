@@ -60,13 +60,13 @@ src embed.FS
 
 MigratePgFs(dsn, src, "migrations")
 */
-func MigratePgFs(dsn string, src embed.FS, p string) (err error) {
+func MigratePgFs(dsn string, src embed.FS, subpath string) (err error) {
 	var (
 		driver source.Driver
 		migr   *migrate.Migrate
 	)
 
-	if driver, err = iofs.New(src, p); err != nil {
+	if driver, err = iofs.New(src, subpath); err != nil {
 		return err
 	}
 
