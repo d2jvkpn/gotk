@@ -44,7 +44,7 @@ func NewError(cause error, code, kind string, opts ...ErrorOption) (self *Error)
 		return nil
 	}
 
-	self = &Error{Cause: cause, Code: code, Kind: kind, Msg: "...", Skip: 1}
+	self = &Error{Cause: cause, Code: code, Kind: kind, Msg: "", Skip: 1}
 	for _, opt := range opts {
 		opt(self)
 	}
@@ -104,12 +104,14 @@ func (self *Error) XKind(kind string) *Error {
 	return self
 }
 
+/*
 func (self *Error) String() string {
 	return fmt.Sprintf(
 		"cause=%q, code=%q, kind=%q, msg=%q",
 		self.Cause.Error(), self.Code, self.Kind, self.Msg,
 	)
 }
+*/
 
 func (self *Error) Trace() string {
 	if self.Fn == "" {
@@ -123,13 +125,17 @@ func (self *Error) Trace() string {
 }
 
 func (self *Error) Describe() string {
-	str := self.String()
+	str := fmt.Sprintf(
+		"cause=%q, code=%q, kind=%q, msg=%q",
+		self.Cause.Error(), self.Code, self.Kind, self.Msg,
+	)
+
 	trace := self.Trace()
 
 	if trace == "" {
 		return str
 	}
-	return fmt.Sprintf("%s; %s", str, trace)
+	return fmt.Sprintf("%s, %s", str, trace)
 }
 
 func (self *Error) IsNil() bool {
