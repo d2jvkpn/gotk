@@ -1,6 +1,7 @@
 package trace_error
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -120,4 +121,28 @@ func Test04_AsError(t *testing.T) {
 
 func anError() *Error {
 	return NewError(errors.New("wrong"), "e0001", "an_error")
+}
+
+func TestErrMarshal(t *testing.T) {
+	var (
+		err error
+		bts []byte
+		e   error
+	)
+
+	err = errors.New("xxxx")
+	bts, e = json.Marshal(err)
+	if e != nil {
+		t.Fatal(e)
+	}
+
+	fmt.Printf("==> %s\n", bts)
+
+	err = fmt.Errorf("xxxx")
+	bts, e = json.Marshal(err)
+	if e != nil {
+		t.Fatal(e)
+	}
+
+	fmt.Printf("==> %s\n", bts)
 }

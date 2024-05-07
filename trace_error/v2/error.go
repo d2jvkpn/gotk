@@ -7,16 +7,16 @@ import (
 )
 
 type Error struct {
-	Cause error `json:"cause"`
+	Cause string `json:"cause"`
+	Code  string `json:"code"`
+	Kind  string `json:"kind"`
+	Msg   string `json:"msg"`
 
-	Code string `json:"code"`
-	Kind string `json:"kind"`
-	Msg  string `json:"msg"`
-
-	Skip int    `json:"skip"`
-	Fn   string `json:"fn"`
-	File string `json:"file"`
-	Line int    `json:"line"`
+	Fn    string `json:"fn,omitempty"`
+	File  string `json:"file,omitempty"`
+	Line  int    `json:"line,omitempty"`
+	cause error
+	skip  int
 }
 
 type ErrorOption func(*Error)
@@ -29,13 +29,13 @@ func Msg(msg string) ErrorOption {
 
 func Skip(skip int) ErrorOption {
 	return func(self *Error) {
-		self.Skip = skip
+		self.skip = skip
 	}
 }
 
 func NoTrace() ErrorOption {
 	return func(self *Error) {
-		self.Skip = -1
+		self.skip = -1
 	}
 }
 
@@ -44,16 +44,16 @@ func NewError(cause error, code, kind string, opts ...ErrorOption) (self *Error)
 		return nil
 	}
 
-	self = &Error{Cause: cause, Code: code, Kind: kind, Msg: "", Skip: 1}
+	self = &Error{Cause: cause.Error(), Code: code, Kind: kind, Msg: "", cause: cause, skip: 1}
 	for _, opt := range opts {
 		opt(self)
 	}
 
-	if self.Skip <= 0 {
+	if self.skip <= 0 {
 		return self
 	}
 
-	fn, file, line, ok := runtime.Caller(self.Skip)
+	fn, file, line, ok := runtime.Caller(self.skip)
 	if !ok {
 		return self
 	}
@@ -71,7 +71,7 @@ func (self *Error) Retrace() *Error {
 		return self
 	}
 
-	self.Skip = 1
+	self.skip = 1
 	self.Line = line
 	self.Fn = runtime.FuncForPC(fn).Name()
 	self.File = filepath.Base(file)
@@ -82,7 +82,7 @@ func (self *Error) Retrace() *Error {
 func (self *Error) Error() string {
 	return fmt.Sprintf(
 		"cause: %q, code: %q, kind: %q, msg: %q",
-		self.Cause.Error(), self.Code, self.Kind, self.Msg,
+		self.Cause, self.Code, self.Kind, self.Msg,
 	)
 }
 
@@ -90,7 +90,9 @@ func (self *Error) XCause(e error) *Error {
 	if e == nil {
 		return self
 	}
-	self.Cause = e
+
+	self.Cause = e.Error()
+	self.cause = e
 	return self
 }
 
@@ -120,14 +122,14 @@ func (self *Error) Trace() string {
 
 	return fmt.Sprintf(
 		"fn=%q, file=%q, line=%d, skip=%d",
-		self.Fn, self.File, self.Line, self.Skip,
+		self.Fn, self.File, self.Line, self.skip,
 	)
 }
 
 func (self *Error) Describe() string {
 	str := fmt.Sprintf(
 		"cause=%q, code=%q, kind=%q, msg=%q",
-		self.Cause.Error(), self.Code, self.Kind, self.Msg,
+		self.Cause, self.Code, self.Kind, self.Msg,
 	)
 
 	trace := self.Trace()
@@ -147,7 +149,7 @@ func (self *Error) IsErr() bool {
 }
 
 func (self *Error) GetCause() error {
-	return self.Cause
+	return self.cause
 }
 
 func (self *Error) GetCode() string {
