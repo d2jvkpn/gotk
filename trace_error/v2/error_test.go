@@ -92,6 +92,7 @@ func Test03(t *testing.T) {
 	fmt.Println(err.Describe())
 }
 
+/*
 func Test04_AsError(t *testing.T) {
 	var err error
 
@@ -122,6 +123,7 @@ func Test04_AsError(t *testing.T) {
 func anError() *Error {
 	return NewError(errors.New("wrong"), "e0001", "an_error")
 }
+*/
 
 func TestErrMarshal(t *testing.T) {
 	var (

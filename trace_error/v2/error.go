@@ -79,12 +79,21 @@ func (self *Error) Retrace() *Error {
 	return self
 }
 
+func (self *Error) String() string {
+	return fmt.Sprintf(
+		"cause=%q, code=%q, kind=%q, msg=%q",
+		self.Cause, self.Code, self.Kind, self.Msg,
+	)
+}
+
+/* don't make Error implments error interface
 func (self *Error) Error() string {
 	return fmt.Sprintf(
 		"cause: %q, code: %q, kind: %q, msg: %q",
 		self.Cause, self.Code, self.Kind, self.Msg,
 	)
 }
+*/
 
 func (self *Error) XCause(e error) *Error {
 	if e == nil {
