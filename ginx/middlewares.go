@@ -9,7 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Cors(origin string) gin.HandlerFunc {
+func Cors(origin string, methods string) gin.HandlerFunc {
+	// methods: GET, POST, PUT, OPTIONS, HEAD
 	if origin == "" {
 		origin = "*"
 	}
@@ -30,7 +31,7 @@ func Cors(origin string) gin.HandlerFunc {
 		// Content-Type, Authorization, X-CSRF-Token
 		ctx.Header("Access-Control-Expose-Headers", exposeHeaders)
 		ctx.Header("Access-Control-Allow-Credentials", "true")
-		ctx.Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD")
+		ctx.Header("Access-Control-Allow-Methods", methods)
 
 		if ctx.Request.Method == "OPTIONS" {
 			ctx.AbortWithStatus(http.StatusNoContent)
