@@ -46,9 +46,9 @@ func (self *HttpConfig) SetServer(server *http.Server) (err error) {
 	return nil
 }
 
-func (self *HttpConfig) SetEngine(engine *gin.Engine) {
+func (self *HttpConfig) SetEngine(engine *gin.Engine, methods string) {
 	if self.Cors != "" {
-		engine.Use(Cors(self.Cors))
+		engine.Use(Cors(self.Cors, methods))
 	}
 
 	router := &engine.RouterGroup
