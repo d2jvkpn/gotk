@@ -21,9 +21,9 @@ type Error struct {
 
 type ErrorOption func(*Error)
 
-func Msg(msg string) ErrorOption {
+func Msg(msg string, a ...any) ErrorOption {
 	return func(self *Error) {
-		self.Msg = msg
+		self.Msg = fmt.Sprintf(msg, a...)
 	}
 }
 
@@ -105,8 +105,8 @@ func (self *Error) XCause(e error) *Error {
 	return self
 }
 
-func (err *Error) XMsg(msg string) *Error {
-	err.Msg = msg
+func (err *Error) XMsg(msg string, a ...any) *Error {
+	err.Msg = fmt.Sprintf(msg, a...)
 	return err
 }
 
