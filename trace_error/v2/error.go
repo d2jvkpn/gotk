@@ -65,7 +65,7 @@ func NewError(cause error, code, kind string, opts ...ErrorOption) (self *Error)
 	return self
 }
 
-func (self *Error) Retrace() *Error {
+func (self *Error) Here() *Error {
 	fn, file, line, ok := runtime.Caller(1)
 	if !ok {
 		return self

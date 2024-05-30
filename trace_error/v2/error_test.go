@@ -28,7 +28,7 @@ func fnc2() (err *Error) {
 
 func fnc3() (err *Error) {
 	err = fnc1()
-	err.Retrace()
+	err.Here()
 	return err
 }
 
@@ -88,7 +88,7 @@ func Test03(t *testing.T) {
 	fmt.Println(">>> func5")
 	err = fnc5()
 	fmt.Println(err.Describe())
-	err.Retrace()
+	err.Here()
 	fmt.Println(err.Describe())
 }
 
