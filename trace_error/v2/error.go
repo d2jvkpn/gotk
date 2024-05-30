@@ -1,6 +1,7 @@
 package trace_error
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -75,6 +76,17 @@ func (self *Error) Here() *Error {
 	self.Line = line
 	self.Fn = runtime.FuncForPC(fn).Name()
 	self.File = filepath.Base(file)
+
+	return self
+}
+
+// self.Line, self.Skip, self.Code, self.Kind, self.Msg keep unchanged
+func (self *Error) Merge(err *Error) *Error {
+	self.cause = errors.Join(self.cause, err.cause)
+	self.Cause = self.cause.Error()
+
+	self.Fn = fmt.Sprintf("%s\n%s", self.Fn, err.Fn)
+	self.File = fmt.Sprintf("%s\n%s", self.File, err.File)
 
 	return self
 }

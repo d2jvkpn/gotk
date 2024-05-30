@@ -7,6 +7,15 @@ import (
 	"testing"
 )
 
+func TestJoinErrs(t *testing.T) {
+	e1 := errors.New("e1")
+	e2 := errors.New("e2")
+	e := errors.Join(e1, e2)
+
+	fmt.Printf("~~~ 1. %+v\n", e)
+	fmt.Printf("~~~ 2. %s\n", e)
+}
+
 func fna() (err *Error) {
 	e := fmt.Errorf("invalid page number")
 	return NewError(e, "bad_request", "invalid_parameter")
