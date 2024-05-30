@@ -82,6 +82,13 @@ func (self *Error) Here() *Error {
 
 // self.Line, self.Skip, self.Code, self.Kind, self.Msg keep unchanged
 func (self *Error) Merge(err *Error) *Error {
+	if err == nil {
+		return self
+	}
+	if self == nil {
+		return err
+	}
+
 	self.cause = errors.Join(self.cause, err.cause)
 	self.Cause = self.cause.Error()
 
