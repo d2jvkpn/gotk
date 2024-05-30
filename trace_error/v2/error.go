@@ -81,7 +81,7 @@ func (self *Error) Here() *Error {
 }
 
 // self.Line, self.Skip, self.Code, self.Kind, self.Msg keep unchanged
-func (self *Error) Merge(err *Error) *Error {
+func (self *Error) Join(err *Error) *Error {
 	if err == nil {
 		return self
 	}
