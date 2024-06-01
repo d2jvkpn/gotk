@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"strconv"
 )
 
 type Error struct {
@@ -13,9 +14,10 @@ type Error struct {
 	Kind  string `json:"kind"`
 	Msg   string `json:"msg"`
 
-	Fn    string `json:"fn,omitempty"`
-	File  string `json:"file,omitempty"`
-	Line  int    `json:"line,omitempty"`
+	Fn   string `json:"fn,omitempty"`
+	File string `json:"file,omitempty"`
+	Line string `json:"line,omitempty"`
+
 	cause error
 	skip  int
 }
@@ -59,7 +61,7 @@ func NewError(cause error, code, kind string, opts ...ErrorOption) (self *Error)
 		return self
 	}
 
-	self.Line = line
+	self.Line = strconv.Itoa(line)
 	self.Fn = runtime.FuncForPC(fn).Name()
 	self.File = filepath.Base(file)
 
@@ -73,7 +75,7 @@ func (self *Error) Here() *Error {
 	}
 
 	self.skip = 1
-	self.Line = line
+	self.Line = strconv.Itoa(line)
 	self.Fn = runtime.FuncForPC(fn).Name()
 	self.File = filepath.Base(file)
 
@@ -92,6 +94,7 @@ func (self *Error) Join(err *Error) *Error {
 	self.cause = errors.Join(self.cause, err.cause)
 	self.Cause = self.cause.Error()
 
+	self.Line = fmt.Sprintf("%s\n%s", self.Line, err.Line)
 	self.Fn = fmt.Sprintf("%s\n%s", self.Fn, err.Fn)
 	self.File = fmt.Sprintf("%s\n%s", self.File, err.File)
 
@@ -149,7 +152,7 @@ func (self *Error) Trace() string {
 	}
 
 	return fmt.Sprintf(
-		"fn=%q, file=%q, line=%d, skip=%d",
+		"fn=%q, file=%q, line=%q, skip=%d",
 		self.Fn, self.File, self.Line, self.skip,
 	)
 }
