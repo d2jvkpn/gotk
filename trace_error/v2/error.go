@@ -91,6 +91,8 @@ func (self *Error) Join(err *Error) *Error {
 		return err
 	}
 
+	// self.Code, self.Kind, self.Msg are unchanged
+
 	self.cause = errors.Join(self.cause, err.cause)
 	self.Cause = self.cause.Error()
 
