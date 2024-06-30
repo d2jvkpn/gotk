@@ -2,6 +2,7 @@ package ginx
 
 import (
 	"bytes"
+	"embed"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -131,7 +132,6 @@ func IndexStaticFiles(router *gin.RouterGroup, d string) (err error) {
 }
 
 func ServeStaticDir(httpDir, local string, listDir bool) func(*gin.RouterGroup) {
-
 	if listDir {
 		return func(rg *gin.RouterGroup) {
 			rg.StaticFS(httpDir, http.Dir(local))
@@ -141,6 +141,26 @@ func ServeStaticDir(httpDir, local string, listDir bool) func(*gin.RouterGroup) 
 			rg.Static(httpDir, local)
 		}
 	}
+}
+
+/*
+go:embed static
+efs embed.FS
+
+p = "static"
+secs = 3600
+*/
+func ServeStaticFS(rg *gin.RouterGroup, efs embed.FS, p string, secs int) (err error) {
+	var fsys fs.FS
+
+	if fsys, err = fs.Sub(efs, p); err != nil {
+		return err
+	}
+
+	static := rg.Group("/"+p, CacheControl(secs))
+	static.StaticFS("/", http.FS(fsys))
+
+	return nil
 }
 
 // name: filename, e.g. favicon.ico
