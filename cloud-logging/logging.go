@@ -43,7 +43,8 @@ func NewLogger(filename string, level zapcore.LevelEnabler, size_mb int, skips .
 		CallerKey:    "caller",
 		FunctionKey:  "func",
 		EncodeLevel:  zapcore.CapitalLevelEncoder,
-		EncodeTime:   zapcore.RFC3339NanoTimeEncoder,
+		// EncodeTime:   zapcore.RFC3339NanoTimeEncoder,
+		EncodeTime:   zapcore.TimeEncoderOfLayout("2006-01-02T15:04:05.000-07:00"),
 		EncodeCaller: zapcore.ShortCallerEncoder,
 	}
 
