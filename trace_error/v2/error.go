@@ -76,8 +76,8 @@ func (self *Error) Here() *Error {
 
 	self.skip = 1
 	self.Line = strconv.Itoa(line)
-	self.Fn = runtime.FuncForPC(fn).Name()
-	self.File = filepath.Base(file)
+	self.Fn = filepath.Base(runtime.FuncForPC(fn).Name())
+	self.File = file
 
 	return self
 }
