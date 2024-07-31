@@ -62,8 +62,8 @@ func NewError(cause error, code, kind string, opts ...ErrorOption) (self *Error)
 	}
 
 	self.Line = strconv.Itoa(line)
-	self.Fn = runtime.FuncForPC(fn).Name()
-	self.File = filepath.Base(file)
+	self.Fn = filepath.Base(runtime.FuncForPC(fn).Name())
+	self.File = file
 
 	return self
 }
