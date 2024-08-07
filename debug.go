@@ -38,7 +38,7 @@ func Stack(prefix string) (slice []string) {
 	bts := bytes.TrimSpace(debug.Stack())
 	// fmt.Printf(">>>\n%s\n<<<\n", bts)
 	out := _StackRE.FindAllStringSubmatch(string(bts), -1)
-	skip := 2
+	const skip = 2
 	if len(out) < skip {
 		return make([]string, 0)
 	}
@@ -53,9 +53,10 @@ func Stack(prefix string) (slice []string) {
 			continue
 		}
 
-		f1 := strings.Split(t[0], "(")[0]
-		f2 := filepath.Base(strings.Fields(t[1])[0])
-		slice = append(slice, fmt.Sprintf("%s(%s)", f1, f2))
+		fp := strings.Fields(t[1])[0]
+		fn := filepath.Base(strings.Split(t[0], "(")[0])
+		// gotk/debug_test.go:8(gotk.TestPanic)
+		slice = append(slice, fmt.Sprintf("%s(%s)", fp, fn))
 	}
 
 	return

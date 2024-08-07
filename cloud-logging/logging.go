@@ -48,7 +48,7 @@ func NewLogger(filename string, level zapcore.LevelEnabler, size_mb int, skips .
 		EncodeCaller: zapcore.ShortCallerEncoder,
 	}
 
-	// zap.InfoLevel
+	// zap.InfoLevel, zapcore.BufferedWriteSyncer
 	logger.core = zapcore.NewCore(
 		zapcore.NewJSONEncoder(logger.config),
 		zapcore.AddSync(logger.Writer),
