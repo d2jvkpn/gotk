@@ -11,5 +11,4 @@ type Err interface {
 
 	GetCause() error
 	GetCode() string
-	GetKind() string
 }

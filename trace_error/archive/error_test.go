@@ -1,34 +1,24 @@
 package trace_error
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
 )
 
-func TestJoinErrs(t *testing.T) {
-	e1 := errors.New("e1")
-	e2 := errors.New("e2")
-	e := errors.Join(e1, e2)
-
-	fmt.Printf("~~~ 1. %+v\n", e)
-	fmt.Printf("~~~ 2. %s\n", e)
-}
-
 func fna() (err *Error) {
 	e := fmt.Errorf("invalid page number")
-	return NewError(e, "bad_request", "invalid_parameter")
+	return NewError(e, 400, "bad_request")
 }
 
 func fnb() (err *Error) {
 	e := fmt.Errorf("unmarshal failed")
-	return NewError(e, "bad_request", "unmarshal_failed", Skip(2))
+	return NewError(e, 400, "unmarshal_failed", Skip(2))
 }
 
 func fnc1() (err *Error) {
 	e := fmt.Errorf("no user")
-	return NewError(e, "bad_request", "not_found", Skip(2))
+	return NewError(e, 404, "not_found", Skip(2))
 }
 
 func fnc2() (err *Error) {
@@ -37,7 +27,7 @@ func fnc2() (err *Error) {
 
 func fnc3() (err *Error) {
 	err = fnc1()
-	err.Here()
+	err.Retrace()
 	return err
 }
 
@@ -51,7 +41,7 @@ func fnc5() (err *Error) {
 
 func func4() (err *Error) {
 	e := fmt.Errorf("an error")
-	return NewError(e, "service_unavailable", "", Skip(-1))
+	return NewError(e, 503, "service_unavailable", Skip(-1))
 }
 
 func Test01(t *testing.T) {
@@ -88,20 +78,19 @@ func Test03(t *testing.T) {
 	)
 
 	e = fmt.Errorf("an error")
-	err = NewError(e, "service_unavailable", "")
+	err = NewError(e, 503, "service_unavailable")
 	fmt.Println(err.Describe())
 
-	err = NewError(e, "service_unavailable", "", Skip(-4))
+	err = NewError(e, 503, "service_unavailable", Skip(-4))
 	fmt.Println(err.Describe())
 
 	fmt.Println(">>> func5")
 	err = fnc5()
 	fmt.Println(err.Describe())
-	err.Here()
+	err.Retrace()
 	fmt.Println(err.Describe())
 }
 
-/*
 func Test04_AsError(t *testing.T) {
 	var err error
 
@@ -130,30 +119,5 @@ func Test04_AsError(t *testing.T) {
 }
 
 func anError() *Error {
-	return NewError(errors.New("wrong"), "e0001", "an_error")
-}
-*/
-
-func TestErrMarshal(t *testing.T) {
-	var (
-		err error
-		bts []byte
-		e   error
-	)
-
-	err = errors.New("xxxx")
-	bts, e = json.Marshal(err)
-	if e != nil {
-		t.Fatal(e)
-	}
-
-	fmt.Printf("==> %s\n", bts)
-
-	err = fmt.Errorf("xxxx")
-	bts, e = json.Marshal(err)
-	if e != nil {
-		t.Fatal(e)
-	}
-
-	fmt.Printf("==> %s\n", bts)
+	return NewError(errors.New("wrong"), 42, "e0001")
 }

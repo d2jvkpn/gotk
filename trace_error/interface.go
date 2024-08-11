@@ -5,10 +5,11 @@ import (
 )
 
 type Err interface {
-	Error() string
+	// Error() string
 	// IsNil() bool
 	IsErr() bool
 
 	GetCause() error
 	GetCode() string
+	GetKind() string
 }
