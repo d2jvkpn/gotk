@@ -1,9 +1,7 @@
 package gotk
 
 import (
-	"fmt"
-	"runtime"
-	"strconv"
+	// "fmt"
 	"time"
 )
 
@@ -14,7 +12,7 @@ type Ticker struct {
 	ticker   *time.Ticker
 }
 
-func NewTicker(funcs []func(), duration time.Duration) *RuntimeInfo {
+func NewTicker(funcs []func(), duration time.Duration) *Ticker {
 	if len(funcs) <= 0 {
 		panic("invalid funcs")
 	}
@@ -44,7 +42,7 @@ func (self *Ticker) Start() {
 				return
 			}
 			for _, fn := range self.funcs {
-				funcs[i]()
+				fn()
 			}
 		}
 	}()
