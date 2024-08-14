@@ -83,7 +83,7 @@ func HttpMetrics(vp *viper.Viper, meta map[string]any, opts ...func(*http.Server
 	}
 
 	if enableDebug {
-		debug := router.Group("/debug", ginx.Cors(vp.GetString("*")))
+		debug := router.Group("/debug", ginx.Cors(vp.GetString("*"), "GET"))
 
 		debug.GET("/meta", func(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, meta)
