@@ -6,6 +6,7 @@ import (
 )
 
 type Ticker struct {
+	status   int // 0=init, 1=running, 2=stopped
 	funcs    []func()
 	duration time.Duration
 	ch       chan struct{}
@@ -21,6 +22,7 @@ func NewTicker(funcs []func(), duration time.Duration) *Ticker {
 	}
 
 	return &Ticker{
+		status:   0,
 		funcs:    funcs,
 		duration: duration,
 		ch:       make(chan struct{}),
@@ -28,7 +30,12 @@ func NewTicker(funcs []func(), duration time.Duration) *Ticker {
 	}
 }
 
+func (self *Ticker) Status() int {
+	return self.status
+}
+
 func (self *Ticker) Start() {
+	self.status = 1
 	go func() {
 		ok := true
 		for {
@@ -46,9 +53,16 @@ func (self *Ticker) Start() {
 			}
 		}
 	}()
+
+	self.status = 1
 }
 
 func (self *Ticker) End() {
+	if self.status != 1 {
+		return
+	}
+
 	self.ticker.Stop()
 	self.ch <- struct{}{}
+	self.status = 2
 }
