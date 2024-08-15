@@ -3,8 +3,8 @@ package gotk
 import (
 	"fmt"
 	// "io"
+	"errors"
 
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -74,20 +74,20 @@ func NewZapLogger(filename string, level zapcore.LevelEnabler, size_mb int, skip
 }
 
 func (logger *ZapLogger) Down() (err error) {
-	var errors []error
+	var errs []error
 
 	if logger == nil {
 		return
 	}
 
-	errors = make([]error, 0, 2)
+	errs = make([]error, 0, 2)
 	if err = logger.Sync(); err != nil {
-		errors = append(errors, fmt.Errorf("Logger.Sync: %w", err))
+		errs = append(errs, fmt.Errorf("Logger.Sync: %w", err))
 	}
 
 	if err = logger.Writer.Close(); err != nil {
-		errors = append(errors, fmt.Errorf("Logger.Writer.Close: %w", err))
+		errs = append(errs, fmt.Errorf("Logger.Writer.Close: %w", err))
 	}
 
-	return multierr.Combine(errors...)
+	return errors.Join(errs...)
 }
