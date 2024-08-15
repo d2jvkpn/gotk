@@ -13,6 +13,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+var (
+	_TestCtx context.Context = context.TODO()
+)
+
 /*
 test_tracer0001:
 - call01:
@@ -22,8 +26,9 @@ test_tracer0001:
 - call02
 - job01
 */
-func TestLoadOtelFile(t *testing.T) {
-	shutdown, err := LoadOtelFile(
+func TestSetupOtelFile(t *testing.T) {
+	shutdown, err := SetupOtelFile(
+		_TestCtx,
 		"wk/tracing.out",
 		"TestTracer",
 		semconv.ServiceVersionKey.String("0.1.0"),
@@ -33,7 +38,7 @@ func TestLoadOtelFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() {
-		if err := shutdown(); err != nil {
+		if err := shutdown(_TestCtx); err != nil {
 			t.Fatal("shutdwon:", err)
 		}
 	}()

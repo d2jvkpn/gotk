@@ -6,7 +6,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -15,22 +14,19 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"google.golang.org/grpc"
 )
 
-func LoadOtelGrpc(addr, service string, secure bool, attrs ...attribute.KeyValue) (
-	closeOtel func() error, err error) {
+func SetupOtelAddr(ctx context.Context, addr, service string, secure bool,
+	attrs ...attribute.KeyValue) (closeOtel func(context.Context) error, err error) {
 	var (
 		client   otlptrace.Client
 		exporter *otlptrace.Exporter
 		reso     *resource.Resource
-		provider *sdktrace.TracerProvider
+		provider *trace.TracerProvider
 	)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 
 	opts := []otlptracegrpc.Option{
 		otlptracegrpc.WithEndpoint(addr),
@@ -54,7 +50,7 @@ func LoadOtelGrpc(addr, service string, secure bool, attrs ...attribute.KeyValue
 
 	attrs = append(attrs, semconv.ServiceNameKey.String(service))
 	reso, err = resource.New(ctx,
-		resource.WithFromEnv(),
+		// resource.WithFromEnv(),
 		// resource.WithProcess(),
 		resource.WithTelemetrySDK(),
 		resource.WithHost(),
@@ -64,25 +60,19 @@ func LoadOtelGrpc(addr, service string, secure bool, attrs ...attribute.KeyValue
 		return nil, err
 	}
 
-	bsp := sdktrace.NewBatchSpanProcessor(exporter)
-	provider = sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithResource(reso),
-		sdktrace.WithSpanProcessor(bsp),
+	bsp := trace.NewBatchSpanProcessor(exporter)
+	provider = trace.NewTracerProvider(
+		trace.WithSampler(trace.AlwaysSample()),
+		trace.WithResource(reso),
+		trace.WithSpanProcessor(bsp),
 	)
 
 	// set global propagator to tracecontext (the default is no-op).
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	otel.SetTracerProvider(provider)
 
-	closeOtel = func() error {
-		var (
-			e1, e2 error
-			ctx    context.Context
-			cancel func()
-		)
-		ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+	closeOtel = func(ctx context.Context) error {
+		var e1, e2 error
 
 		if e1 = provider.Shutdown(ctx); e1 != nil {
 			otel.Handle(e1)
@@ -98,13 +88,79 @@ func LoadOtelGrpc(addr, service string, secure bool, attrs ...attribute.KeyValue
 	return closeOtel, nil
 }
 
-func LoadOtelFile(fp, service string, attrs ...attribute.KeyValue) (
-	closeOtel func() error, err error) {
+// conn, err := grpc.DialContext(ctx, "collector:4317", grpc.WithInsecure())
+func SetupOtelLisener(ctx context.Context, conn *grpc.ClientConn, service string,
+	attrs ...attribute.KeyValue) (closeOtel func(context.Context) error, err error) {
+	var (
+		client   otlptrace.Client
+		exporter *otlptrace.Exporter
+		reso     *resource.Resource
+		provider *trace.TracerProvider
+	)
+
+	client = otlptracegrpc.NewClient(
+		otlptracegrpc.WithGRPCConn(conn),
+		otlptracegrpc.WithDialOption(grpc.WithBlock()),
+	)
+
+	if exporter, err = otlptrace.New(ctx, client); err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err == nil {
+			return
+		}
+
+		_ = exporter.Shutdown(context.TODO())
+	}()
+
+	attrs = append(attrs, semconv.ServiceNameKey.String(service))
+	reso, err = resource.New(ctx,
+		// resource.WithFromEnv(),
+		// resource.WithProcess(),
+		resource.WithTelemetrySDK(),
+		resource.WithHost(),
+		resource.WithAttributes(attrs...),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	bsp := trace.NewBatchSpanProcessor(exporter)
+	provider = trace.NewTracerProvider(
+		trace.WithSampler(trace.AlwaysSample()),
+		trace.WithResource(reso),
+		trace.WithSpanProcessor(bsp),
+	)
+
+	// set global propagator to tracecontext (the default is no-op).
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+	otel.SetTracerProvider(provider)
+
+	closeOtel = func(ctx context.Context) error {
+		var e1, e2 error
+
+		if e1 = provider.Shutdown(ctx); e1 != nil {
+			otel.Handle(e1)
+		}
+
+		if e2 = exporter.Shutdown(ctx); e2 != nil {
+			otel.Handle(e2)
+		}
+
+		return errors.Join(e1, e2)
+	}
+
+	return closeOtel, nil
+}
+
+func SetupOtelFile(ctx context.Context, fp, service string, attrs ...attribute.KeyValue) (
+	closeOtel func(context.Context) error, err error) {
 	var (
 		file     *os.File
 		exporter *stdouttrace.Exporter
 		reso     *resource.Resource
-		provider *sdktrace.TracerProvider
+		provider *trace.TracerProvider
 	)
 
 	if err = os.MkdirAll(filepath.Dir(fp), 0755); err != nil {
@@ -116,7 +172,7 @@ func LoadOtelFile(fp, service string, attrs ...attribute.KeyValue) (
 		}
 
 		if exporter != nil {
-			_ = exporter.Shutdown(context.TODO())
+			_ = exporter.Shutdown(ctx)
 		}
 		if file != nil {
 			_ = file.Close()
@@ -143,21 +199,15 @@ func LoadOtelFile(fp, service string, attrs ...attribute.KeyValue) (
 	// reso, err := resource.Merge(resource.Default(), b)
 	reso = resource.NewWithAttributes(semconv.SchemaURL, attrs...)
 
-	provider = sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(reso),
+	provider = trace.NewTracerProvider(
+		trace.WithBatcher(exporter),
+		trace.WithResource(reso),
 	)
 
 	otel.SetTracerProvider(provider)
 
-	closeOtel = func() error {
-		var (
-			e1, e2, e3 error
-			ctx        context.Context
-			cancel     func()
-		)
-		ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+	closeOtel = func(ctx context.Context) error {
+		var e1, e2, e3 error
 
 		if e1 = provider.Shutdown(ctx); e1 != nil {
 			otel.Handle(e1)
