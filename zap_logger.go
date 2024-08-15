@@ -1,4 +1,4 @@
-package logging
+package gotk
 
 import (
 	"fmt"
@@ -10,21 +10,21 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-type Logger struct {
+type ZapLogger struct {
 	Writer *lumberjack.Logger
 	config zapcore.EncoderConfig
 	core   zapcore.Core
 	*zap.Logger
 }
 
-func NewLogger(filename string, level zapcore.LevelEnabler, size_mb int, skips ...int) (
-	logger *Logger, err error) {
+func NewZapLogger(filename string, level zapcore.LevelEnabler, size_mb int, skips ...int) (
+	logger *ZapLogger, err error) {
 
 	if filename == "" || size_mb <= 0 {
 		return nil, fmt.Errorf("invalid filename or size_mb")
 	}
 
-	logger = new(Logger)
+	logger = new(ZapLogger)
 
 	logger.Writer = &lumberjack.Logger{
 		Filename:  filename,
@@ -36,13 +36,13 @@ func NewLogger(filename string, level zapcore.LevelEnabler, size_mb int, skips .
 	}
 
 	logger.config = zapcore.EncoderConfig{
-		MessageKey:   "msg",
-		LevelKey:     "level",
-		TimeKey:      "time",
-		NameKey:      "name",
-		CallerKey:    "caller",
-		FunctionKey:  "func",
-		EncodeLevel:  zapcore.CapitalLevelEncoder,
+		MessageKey:  "msg",
+		LevelKey:    "level",
+		TimeKey:     "time",
+		NameKey:     "name",
+		CallerKey:   "caller",
+		FunctionKey: "func",
+		EncodeLevel: zapcore.CapitalLevelEncoder,
 		// EncodeTime:   zapcore.RFC3339NanoTimeEncoder,
 		EncodeTime:   zapcore.TimeEncoderOfLayout("2006-01-02T15:04:05.000-07:00"),
 		EncodeCaller: zapcore.ShortCallerEncoder,
@@ -73,7 +73,7 @@ func NewLogger(filename string, level zapcore.LevelEnabler, size_mb int, skips .
 	return logger, nil
 }
 
-func (logger *Logger) Down() (err error) {
+func (logger *ZapLogger) Down() (err error) {
 	var errors []error
 
 	if logger == nil {
