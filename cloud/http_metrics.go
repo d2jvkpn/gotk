@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/d2jvkpn/gotk"
 	"github.com/d2jvkpn/gotk/ginx"
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus"
 	// "github.com/prometheus/client_golang/prometheus/promauto" // ?
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
@@ -123,73 +121,4 @@ func HttpMetrics(vp *viper.Viper, meta map[string]any, opts ...func(*http.Server
 	}()
 
 	return shutdown, nil
-}
-
-// https://prometheus.io/docs/prometheus/latest/querying/examples/
-// https://robert-scherbarth.medium.com/measure-request-duration-with-prometheus-and-golang-adc6f4ca05fe
-func PromMetrics(sub, name string) (hf gin.HandlerFunc, err error) {
-	requestsTotal := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Subsystem: sub,
-		Name:      name + "_total",
-		Help:      "Total number of " + sub,
-	}, []string{"status"})
-
-	// promauto.NewHistogramVec
-	requestsDuration := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Subsystem: sub,
-		Name:      name + "_duration",
-		Help:      "Durations(milliseconds) of " + sub,
-		Buckets:   prometheus.DefBuckets,
-	})
-
-	/*
-		requestDuration := promauto.NewHistogramVec(prometheus.HistogramOpts{
-			Subsystem: "http",
-			Name:      "http_requests_duration",
-			Help:      "Request duration(milliseconds) of HTTP requests",
-			Buckets:   prometheus.DefBuckets,
-		}, []string{"path"})
-	*/
-
-	inflight := prometheus.NewGauge(prometheus.GaugeOpts{
-		Subsystem: sub,
-		Name:      name + "_inflight",
-		Help:      "Inflights of " + sub,
-	})
-
-	if err = prometheus.Register(requestsTotal); err != nil {
-		return nil, err
-	}
-
-	if err = prometheus.Register(requestsDuration); err != nil {
-		return nil, err
-	}
-
-	if err = prometheus.Register(inflight); err != nil {
-		return nil, err
-	}
-
-	hf = func(ctx *gin.Context) {
-		// req := ctx.Request
-		inflight.Inc()
-		defer inflight.Dec()
-
-		start := time.Now()
-		// timer := prometheus.NewTimer(requestDuration.WithLabelValues(req.Method, req.URL.Path))
-		ctx.Next()
-
-		status := strconv.Itoa(ctx.Writer.Status())
-		requestsTotal.WithLabelValues(status).Inc()
-
-		// timer.ObserveDuration()
-		ms := time.Since(start).Milliseconds()
-		msFloat := float64(ms)
-		if ms == 0 {
-			msFloat = 0.1
-		}
-		// requestsDuration.WithLabelValues(status, req.Method, req.URL.Path).Observe(msFloat)
-		requestsDuration.Observe(msFloat)
-	}
-
-	return hf, nil
 }

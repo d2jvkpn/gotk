@@ -4,9 +4,14 @@ go 1.23
 
 replace github.com/d2jvkpn/gotk => ../
 
+replace github.com/d2jvkpn/gotk/trace_error => ../trace_error
+
 require (
 	github.com/d2jvkpn/gotk v0.0.0-20240813045800-bd7582bda75b
+	github.com/d2jvkpn/gotk/trace_error v0.0.0-00010101000000-000000000000
+	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
+	github.com/google/uuid v1.4.0
 	github.com/spf13/viper v1.19.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.26.0
@@ -51,5 +56,6 @@ require (
 	golang.org/x/text v0.17.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

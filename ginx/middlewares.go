@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,6 +41,28 @@ func Cors(origin string, methods string) gin.HandlerFunc {
 
 		ctx.Next()
 	}
+}
+
+func Cors2(origins []string, maxAges ...time.Duration) gin.HandlerFunc {
+	maxAge := 12 * time.Hour
+	if len(maxAges) > 0 {
+		maxAge = maxAges[0]
+	}
+
+	return cors.New(cors.Config{
+		AllowOrigins: origins,
+		AllowMethods: []string{"GET", "POST", "OPTIONS", "HEAD"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders: []string{
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Headers",
+			"Content-Type",
+			"Content-Length",
+		},
+		AllowCredentials: true,
+		// AllowOriginFunc:  func(origin string) bool { return origin == "https://github.com" },
+		MaxAge: maxAge,
+	})
 }
 
 func CacheControl(seconds int) gin.HandlerFunc {

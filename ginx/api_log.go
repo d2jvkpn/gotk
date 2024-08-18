@@ -1,94 +1,152 @@
 package ginx
 
 import (
+	// "errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/d2jvkpn/gotk"
+	"github.com/d2jvkpn/gotk/trace_error"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-// skip = 5
-func APILog(lgg *zap.Logger, name string, skip int) gin.HandlerFunc {
-	mod, _ := gotk.RootModule()
-	logger := lgg.Named(name)
+func NewAPILog(logger *zap.Logger, server string) (hf gin.HandlerFunc) {
+	gomod, _ := gotk.RootModule()
+	debug := logger.Level() == zapcore.DebugLevel
 
-	return func(ctx *gin.Context) {
+	hf = func(ctx *gin.Context) {
 		var (
-			start time.Time
-			msg   string
+			e           error
+			api         string
+			requestId   string
+			panicField  map[string]any
+			start       time.Time
+			err         *trace_error.Error
+			fields      []zap.Field
+			data        any
+			labelValues [2]string
 		)
 
+		// concurrentRequests.Inc()
+		api = fmt.Sprintf("%s@%s", ctx.Request.Method, ctx.Request.URL.Path)
+
+		fields = make([]zap.Field, 0, 11)
+		appendString := func(key, val string) {
+			fields = append(fields, zap.String(key, val))
+		}
+
 		start = time.Now()
-		msg = fmt.Sprintf("%s@%s", ctx.Request.Method, ctx.Request.URL.Path)
+		requestId = uuid.New().String()
+		ctx.Set("RequestId", requestId) // CONTEXT_RequestId
+		ctx.Header("x-server", server)  // HEADER_Server
+
+		// HEADER_Client
+		// client := ctx.GetHeader("x-client")
+
+		appendString("ip", ctx.ClientIP())
+		appendString("request", api)
+		appendString("query", ctx.Request.URL.RawQuery)
+
+		final := func() {
+			// ctx.Request.Referer(), ctx.GetHeader("User-Agent")
+
+			tokenId := ctx.GetString("TokenId") // CONTEXT_TokenId
+			appendString("tokenId", tokenId)
+
+			accountId := ctx.GetString("AccountId") // CONTEXT_AccountId
+			appendString("accountId", accountId)
+
+			latency := float64(time.Since(start).Microseconds()) / 1e3
+			fields = append(fields, zap.Float64("latencyMs", latency))
+
+			status := ctx.Writer.Status()
+			fields = append(fields, zap.Int("status", status))
+
+			labelValues[0], labelValues[1] = "OK", ""
+			if status != http.StatusOK {
+				if err, e = Get[*trace_error.Error](ctx, "Error"); e == nil { // CONTEXT_Error
+					fields = append(fields, zap.Any("error", &err))
+					labelValues[0], labelValues[1] = err.Code, err.Kind
+				}
+			}
+
+			// CONTEXT_Data
+			if data, e = Get[any](ctx, "Data"); e == nil {
+				fields = append(fields, zap.Any("data", &data))
+			}
+
+			if panicField != nil {
+				fields = append(fields, zap.Any("panic", panicField))
+			}
+
+			switch {
+			case status < 400:
+				logger.Info(requestId, fields...)
+				// labelValues[0] = "200"
+			case status >= 400 && status < 500:
+				logger.Warn(requestId, fields...)
+				// labelValues[0] = "400"
+			default:
+				logger.Error(requestId, fields...)
+				// labelValues[0] = "500"
+			}
+		}
 
 		defer func() {
-			var recoverData any
+			var (
+				panicData any
+				panicErr  *trace_error.Error
+			)
 
-			if recoverData = recover(); recoverData == nil {
+			if debug && err != nil {
+				fmt.Fprintf(
+					os.Stderr, "==> http_log error: %s@%s, %s, %+v, %s\n",
+					ctx.Request.Method, ctx.Request.URL.Path, requestId, err, err.Trace(),
+				)
+			}
+
+			if panicData = recover(); panicData == nil {
 				return
 			}
-			// fmt.Println("!!! 3")
 
-			// TODO: alerting
-			SetData(ctx, map[string]any{"_recover": recoverData, "_stacks": gotk.Stack(mod)})
-
-			ctx.JSON(
-				http.StatusInternalServerError,
-				gin.H{"request_id": ctx.GetString(GIN_RequestId), "code": 1, "msg": "panic"},
+			// errx.NoTrace(), errx.Skip(5)
+			panicErr = trace_error.NewError(
+				fmt.Errorf("panic"),
+				"internal_error",
+				"InternalError",
+				trace_error.NoTrace(),
 			)
-			apiLogEnd(ctx, start, msg, logger)
+			ctx.JSON(http.StatusInternalServerError, panicErr)
+
+			stacks := gotk.Stack(gomod)
+			panicField = map[string]any{"error": panicErr, "data": &panicData, "stacks": stacks}
+
+			fmt.Fprintf(
+				os.Stderr,
+				"!!! http_log panic: %s, %v; %s\n", requestId, panicData, stacks,
+			)
+
+			final()
 		}()
 
+		// ctx.Status(1000)
 		ctx.Next()
 
-		// TODO: timeout check
-		apiLogEnd(ctx, start, msg, logger)
-	}
-}
+		/*
+			select {
+			case <-ctx.Done():
+				logger.Named("http_timeout").Warn(requestId)
+			default:
+			}
+		*/
 
-func apiLogEnd(ctx *gin.Context, start time.Time, msg string, logger *zap.Logger) {
-	var (
-		statusCode int
-		fields     []zap.Field
-	)
-
-	fields = make([]zap.Field, 0, 8)
-	push := func(key, field string) {
-		fields = append(fields, zap.String(key, field))
+		final()
 	}
 
-	push("ip", ctx.ClientIP())
-	push("query", ctx.Request.URL.RawQuery)
-	push("request_id", ctx.GetString(GIN_RequestId))
-
-	statusCode = ctx.Writer.Status()
-	fields = append(fields, zap.Int("status_code", statusCode))
-
-	latency := fmt.Sprintf("%fms", float64(time.Since(start).Microseconds())/1e3)
-	push("latency", latency)
-
-	if identity, e := Get[map[string]string](ctx, GIN_Identity); e == nil {
-		fields = append(fields, zap.Any("identity", identity))
-	}
-
-	if data, e := Get[map[string]any](ctx, GIN_Data); e == nil {
-		fields = append(fields, zap.Any("data", data))
-	}
-
-	// ki, _ = Get[*api_key.KeyInvocation](ctx, KEY_AKI)
-	if err, ok := ctx.Get(GIN_Error); ok {
-		fields = append(fields, zap.Any("error", err))
-	}
-
-	switch {
-	case statusCode < 400:
-		logger.Info(msg, fields...)
-	case statusCode >= 400 && statusCode < 500:
-		logger.Warn(msg, fields...)
-	default:
-		logger.Error(msg, fields...)
-	}
+	return hf
 }
