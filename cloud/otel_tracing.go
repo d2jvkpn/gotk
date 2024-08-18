@@ -91,6 +91,7 @@ func SetupOtelTracing(appName string, vp *viper.Viper, attrs ...attribute.KeyVal
 	bsp := trace.NewBatchSpanProcessor(exporter)
 	provider = trace.NewTracerProvider(
 		trace.WithSampler(trace.AlwaysSample()),
+		// trace.WithSampler(trace.TraceIDRatioBased(0.5)),
 		trace.WithResource(reso),
 		trace.WithSpanProcessor(bsp),
 	)
