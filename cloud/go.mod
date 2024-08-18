@@ -12,6 +12,7 @@ require (
 	github.com/d2jvkpn/gotk/trace_error v0.0.0-00010101000000-000000000000
 	github.com/prometheus/client_golang v1.20.0
 	github.com/spf13/viper v1.19.0
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.53.0
 	go.opentelemetry.io/otel v1.28.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.28.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.28.0

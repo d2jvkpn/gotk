@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	otelprometheus "go.opentelemetry.io/otel/exporters/prometheus"
@@ -31,7 +32,7 @@ func SetupOtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.
 }
 
 // https://opentelemetry.io/docs/languages/go/getting-started/
-func SetupOtelMetrics(appName string, vp *viper.Viper) (
+func SetupOtelMetrics(appName string, vp *viper.Viper, withRuntime bool) (
 	otelmetric.Meter, func(context.Context) error, error) {
 	var (
 		err      error
@@ -43,14 +44,14 @@ func SetupOtelMetrics(appName string, vp *viper.Viper) (
 	)
 
 	ctx = context.Background()
-	shutdown = func(context.Context) error { return nil }
+	// shutdown = func(context.Context) error { return nil }
 
 	reso, err = resource.New(
 		ctx,
 		resource.WithAttributes(semconv.ServiceNameKey.String(appName)),
 	)
 	if err != nil {
-		return nil, shutdown, err
+		return nil, nil, err // nil, shutdown, err
 	}
 
 	opts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(vp.GetString("address"))}
@@ -59,16 +60,26 @@ func SetupOtelMetrics(appName string, vp *viper.Viper) (
 	}
 
 	if exporter, err = otlpmetricgrpc.New(ctx, opts...); err != nil {
-		return nil, shutdown, err
+		return nil, nil, err // nil, shutdown, err
 	}
 
 	provider = sdkmetric.NewMeterProvider(
 		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(
-			exporter, sdkmetric.WithInterval(10*time.Second),
+			exporter, sdkmetric.WithInterval(15*time.Second),
 		)),
 		sdkmetric.WithResource(reso),
 	)
 	otel.SetMeterProvider(provider)
+
+	if withRuntime {
+		err = runtime.Start(
+			runtime.WithMeterProvider(provider),
+			runtime.WithMinimumReadMemStatsInterval(15*time.Second),
+		)
+		if err != nil {
+			return nil, shutdown, err
+		}
+	}
 
 	return provider.Meter(appName), exporter.Shutdown, nil
 }

@@ -28,7 +28,7 @@ func PromMetricsAPI() (func(string, float64, *trace_error.Error), error) {
 		prometheus.HistogramOpts{
 			Name:    "http_latency",
 			Help:    "HTTP response latency milliseconds",
-			Buckets: []float64{10, 100, 200, 500, 1000, 5000}, // prometheus.DefBuckets,
+			Buckets: []float64{10.0, 100.0, 200.0, 500.0, 1000.0, 5000.0}, // prometheus.DefBuckets,
 		},
 		[]string{"api"},
 	)
