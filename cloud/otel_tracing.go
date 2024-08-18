@@ -21,41 +21,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-func SetupOtelTracing(appName string, vp *viper.Viper) (
+func SetupOtelTracing(appName string, vp *viper.Viper, attrs ...attribute.KeyValue) (
 	shutdown func(context.Context) error, err error) {
 	var (
 		address  string
-		grpcConn *grpc.ClientConn
-	)
-
-	address = vp.GetString("address")
-
-	opts := []grpc.DialOption{grpc.WithTimeout(time.Second * 3)}
-	//opts := []otlptracegrpc.Option{
-	//	otlptracegrpc.WithEndpoint(addr),
-	//	otlptracegrpc.WithDialOption(grpc.WithBlock()),
-	//}
-	if !vp.GetBool("tls") {
-		opts = append(opts, grpc.WithInsecure())
-	}
-	grpcConn, err = grpc.DialContext(context.Background(), address, opts...)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if shutdown, err = setupOtelTracing(grpcConn, appName); err != nil {
-		return nil, err
-	}
-
-	return shutdown, nil
-}
-
-// conn, err := grpc.DialContext(ctx, "collector:4317", grpc.WithInsecure())
-func setupOtelTracing(conn *grpc.ClientConn, service string, attrs ...attribute.KeyValue) (
-	shutdown func(context.Context) error, err error) {
-	var (
 		ctx      context.Context
+		conn     *grpc.ClientConn
 		client   otlptrace.Client
 		exporter *otlptrace.Exporter
 		reso     *resource.Resource
@@ -63,6 +34,17 @@ func setupOtelTracing(conn *grpc.ClientConn, service string, attrs ...attribute.
 	)
 
 	ctx = context.Background()
+	address = vp.GetString("address")
+
+	//
+	opts := []grpc.DialOption{grpc.WithTimeout(time.Second * 3)}
+	if !vp.GetBool("tls") {
+		opts = append(opts, grpc.WithInsecure())
+	}
+
+	if conn, err = grpc.DialContext(ctx, address, opts...); err != nil {
+		return nil, err
+	}
 
 	client = otlptracegrpc.NewClient(
 		otlptracegrpc.WithGRPCConn(conn),
@@ -72,6 +54,20 @@ func setupOtelTracing(conn *grpc.ClientConn, service string, attrs ...attribute.
 	if exporter, err = otlptrace.New(ctx, client); err != nil {
 		return nil, err
 	}
+
+	/*
+		opts := []otlptracegrpc.Option{
+			otlptracegrpc.WithEndpoint(addr),
+			otlptracegrpc.WithDialOption(grpc.WithBlock()),
+		}
+		if !vp.GetBool("tls") {
+			opts = append(opts, grpc.WithInsecure())
+		}
+		if exporter, err = otlptracegrpc.New(ctx, opts...); err != nil {
+			return nil, err
+		}
+	*/
+
 	defer func() {
 		if err == nil {
 			return
@@ -80,7 +76,7 @@ func setupOtelTracing(conn *grpc.ClientConn, service string, attrs ...attribute.
 		_ = exporter.Shutdown(ctx)
 	}()
 
-	attrs = append(attrs, semconv.ServiceNameKey.String(service))
+	attrs = append(attrs, semconv.ServiceNameKey.String(appName))
 	reso, err = resource.New(ctx,
 		// resource.WithFromEnv(),
 		// resource.WithProcess(),
