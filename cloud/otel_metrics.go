@@ -15,7 +15,7 @@ import (
 )
 
 // without export to otel-collector
-func OtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
+func SetupOtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
 	var (
 		err      error
 		exporter *otelprometheus.Exporter
