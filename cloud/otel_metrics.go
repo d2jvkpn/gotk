@@ -16,7 +16,8 @@ import (
 )
 
 // without export to otel-collector
-func SetupOtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
+func SetupOtelMetricsWithoutExport(appName string, vp *viper.Viper, withRuntime bool) (
+	otelmetric.Meter, error) {
 	var (
 		err      error
 		exporter *otelprometheus.Exporter
@@ -27,6 +28,16 @@ func SetupOtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.
 		return nil, err
 	}
 	provider = sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
+
+	if withRuntime {
+		err = runtime.Start(
+			runtime.WithMeterProvider(provider),
+			runtime.WithMinimumReadMemStatsInterval(15*time.Second),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return provider.Meter(appName), nil
 }
