@@ -3,12 +3,11 @@ package cloud
 import (
 	// "fmt"
 
-	. "github.com/d2jvkpn/gotk/trace_error"
-
+	"github.com/d2jvkpn/gotk/trace_error"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func PromMetricsAPI() (func(string, float64, *Error), error) {
+func PromMetricsAPI() (func(string, float64, *trace_error.Error), error) {
 	var (
 		e              error
 		codeCounter    *prometheus.CounterVec
@@ -46,7 +45,7 @@ func PromMetricsAPI() (func(string, float64, *Error), error) {
 		}
 	}
 
-	return func(api string, latency float64, err *Error) {
+	return func(api string, latency float64, err *trace_error.Error) {
 		var labelValues [2]string
 
 		labelValues[0], labelValues[1] = "OK", ""

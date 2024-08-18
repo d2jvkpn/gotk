@@ -5,13 +5,12 @@ import (
 	// "fmt"
 	"time"
 
-	. "github.com/d2jvkpn/gotk/trace_error"
-
+	"github.com/d2jvkpn/gotk/trace_error"
 	"go.opentelemetry.io/otel/attribute"
 	otelmetric "go.opentelemetry.io/otel/metric"
 )
 
-func OtelMetricsAPI(meter otelmetric.Meter) (func(string, float64, *Error), error) {
+func OtelMetricsAPI(meter otelmetric.Meter) (func(string, float64, *trace_error.Error), error) {
 	var (
 		e              error
 		codeCounter    otelmetric.Float64Counter
@@ -36,7 +35,7 @@ func OtelMetricsAPI(meter otelmetric.Meter) (func(string, float64, *Error), erro
 		return nil, e
 	}
 
-	return func(api string, latency float64, err *Error) {
+	return func(api string, latency float64, err *trace_error.Error) {
 		var labelValues [2]string
 
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
