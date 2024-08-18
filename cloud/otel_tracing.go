@@ -4,6 +4,8 @@ import (
 	// "fmt"
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/viper"
@@ -11,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -20,27 +23,29 @@ import (
 
 func SetupOtelTracing(appName string, vp *viper.Viper) (
 	shutdown func(context.Context) error, err error) {
-	var grpcConn *grpc.ClientConn
+	var (
+		address  string
+		grpcConn *grpc.ClientConn
+	)
 
-	shutdown = func(context.Context) error { return nil }
-	if !vp.GetBool("trace") {
-		return shutdown, nil
-	}
+	address = vp.GetString("address")
 
 	opts := []grpc.DialOption{grpc.WithTimeout(time.Second * 3)}
+	//opts := []otlptracegrpc.Option{
+	//	otlptracegrpc.WithEndpoint(addr),
+	//	otlptracegrpc.WithDialOption(grpc.WithBlock()),
+	//}
 	if !vp.GetBool("tls") {
 		opts = append(opts, grpc.WithInsecure())
 	}
+	grpcConn, err = grpc.DialContext(context.Background(), address, opts...)
 
-	grpcConn, err = grpc.DialContext(
-		context.Background(), vp.GetString("address"), opts...,
-	)
 	if err != nil {
-		return shutdown, err
+		return nil, err
 	}
 
 	if shutdown, err = setupOtelTracing(grpcConn, appName); err != nil {
-		return shutdown, err
+		return nil, err
 	}
 
 	return shutdown, nil
@@ -57,7 +62,6 @@ func setupOtelTracing(conn *grpc.ClientConn, service string, attrs ...attribute.
 		provider *trace.TracerProvider
 	)
 
-	shutdown = func(context.Context) error { return nil }
 	ctx = context.Background()
 
 	client = otlptracegrpc.NewClient(
@@ -66,7 +70,7 @@ func setupOtelTracing(conn *grpc.ClientConn, service string, attrs ...attribute.
 	)
 
 	if exporter, err = otlptrace.New(ctx, client); err != nil {
-		return shutdown, err
+		return nil, err
 	}
 	defer func() {
 		if err == nil {
@@ -85,7 +89,7 @@ func setupOtelTracing(conn *grpc.ClientConn, service string, attrs ...attribute.
 		resource.WithAttributes(attrs...),
 	)
 	if err != nil {
-		return shutdown, err
+		return nil, err
 	}
 
 	bsp := trace.NewBatchSpanProcessor(exporter)
@@ -114,4 +118,77 @@ func setupOtelTracing(conn *grpc.ClientConn, service string, attrs ...attribute.
 	}
 
 	return shutdown, nil
+}
+
+func SetupOtelTracingFile(ctx context.Context, fp, service string, attrs ...attribute.KeyValue) (
+	closeOtel func(context.Context) error, err error) {
+	var (
+		file     *os.File
+		exporter *stdouttrace.Exporter
+		reso     *resource.Resource
+		provider *trace.TracerProvider
+	)
+
+	if err = os.MkdirAll(filepath.Dir(fp), 0755); err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err == nil {
+			return
+		}
+
+		if exporter != nil {
+			_ = exporter.Shutdown(ctx)
+		}
+		if file != nil {
+			_ = file.Close()
+		}
+	}()
+
+	if file, err = os.Create(fp); err != nil {
+		return nil, err
+	}
+
+	exporter, err = stdouttrace.New(
+		stdouttrace.WithWriter(file),
+		// Use human-readable output.
+		stdouttrace.WithPrettyPrint(),
+		// Do not print timestamps for the demo.
+		// stdouttrace.WithoutTimestamps(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	attrs = append(attrs, semconv.ServiceNameKey.String(service))
+
+	// reso, err := resource.Merge(resource.Default(), b)
+	reso = resource.NewWithAttributes(semconv.SchemaURL, attrs...)
+
+	provider = trace.NewTracerProvider(
+		trace.WithBatcher(exporter),
+		trace.WithResource(reso),
+	)
+
+	otel.SetTracerProvider(provider)
+
+	closeOtel = func(ctx context.Context) error {
+		var e1, e2, e3 error
+
+		if e1 = provider.Shutdown(ctx); e1 != nil {
+			otel.Handle(e1)
+		}
+
+		if e2 = exporter.Shutdown(ctx); e2 != nil {
+			otel.Handle(e2)
+		}
+
+		if e3 = file.Close(); e3 != nil {
+			otel.Handle(e3)
+		}
+
+		return errors.Join(e1, e2, e3)
+	}
+
+	return closeOtel, nil
 }

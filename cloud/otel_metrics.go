@@ -1,78 +1,74 @@
 package cloud
 
 import (
-	// "errors"
-	"fmt"
-	"net/http"
+	"context"
 	"time"
 
-	"github.com/d2jvkpn/gotk/ginx"
-	"github.com/d2jvkpn/gotk/trace_error"
-	"github.com/gin-gonic/gin"
-	"go.opentelemetry.io/otel/attribute"
+	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+	otelprometheus "go.opentelemetry.io/otel/exporters/prometheus"
 	otelmetric "go.opentelemetry.io/otel/metric"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
-func OtelMetrics(meter otelmetric.Meter) (hf gin.HandlerFunc, err error) {
+// without export to otel-collector
+func OtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
 	var (
-		codeCounter    otelmetric.Float64Counter
-		requestLatency otelmetric.Float64Histogram
+		err      error
+		exporter *otelprometheus.Exporter
+		provider *sdkmetric.MeterProvider
 	)
 
-	// http_code, http response code summary
-	codeCounter, err = meter.Float64Counter(
-		"http_code", // suffix _total added
-		otelmetric.WithDescription("HTTP response code and kind counter"),
-	)
-	if err != nil {
+	if exporter, err = otelprometheus.New(); err != nil {
 		return nil, err
 	}
+	provider = sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
 
-	requestLatency, err = meter.Float64Histogram(
-		"http_latency",
-		otelmetric.WithDescription("HTTP response latency milliseconds"),
-		otelmetric.WithExplicitBucketBoundaries(10.0, 100.0, 200.0, 500.0, 1000.0, 5000.0),
+	return provider.Meter(appName), nil
+}
+
+// https://opentelemetry.io/docs/languages/go/getting-started/
+func SetupOtelMetrics(appName string, vp *viper.Viper) (
+	otelmetric.Meter, func(context.Context) error, error) {
+	var (
+		err      error
+		ctx      context.Context
+		exporter *otlpmetricgrpc.Exporter
+		reso     *resource.Resource
+		provider *sdkmetric.MeterProvider
+		shutdown func(context.Context) error
+	)
+
+	ctx = context.Background()
+	shutdown = func(context.Context) error { return nil }
+
+	reso, err = resource.New(
+		ctx,
+		resource.WithAttributes(semconv.ServiceNameKey.String(appName)),
 	)
 	if err != nil {
-		return nil, err
+		return nil, shutdown, err
 	}
 
-	hf = func(ctx *gin.Context) {
-		var (
-			e           error
-			api         string
-			status      int
-			start       time.Time
-			err         *trace_error.Error
-			labelValues [2]string
-		)
-
-		// concurrentRequests.Inc()
-		api = fmt.Sprintf("%s@%s", ctx.Request.Method, ctx.Request.URL.Path)
-
-		start = time.Now()
-		ctx.Next()
-
-		status = ctx.Writer.Status()
-		latency := float64(time.Since(start).Microseconds()) / 1e3
-
-		labelValues[0], labelValues[1] = "OK", ""
-		if status != http.StatusOK {
-			if err, e = ginx.Get[*trace_error.Error](ctx, "Error"); e == nil {
-				labelValues[0], labelValues[1] = err.Code, err.Kind
-			}
-		}
-
-		codeCounter.Add(ctx, 1, otelmetric.WithAttributes(
-			attribute.Key("code").String(labelValues[0]),
-			attribute.Key("kind").String(labelValues[1]),
-		))
-
-		requestLatency.Record(ctx, latency, otelmetric.WithAttributes(
-			attribute.Key("api").String(api),
-		))
-		// concurrentRequests.Dec()
+	opts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(vp.GetString("address"))}
+	if !vp.GetBool("tls") {
+		opts = append(opts, otlpmetricgrpc.WithInsecure())
 	}
 
-	return hf, nil
+	if exporter, err = otlpmetricgrpc.New(ctx, opts...); err != nil {
+		return nil, shutdown, err
+	}
+
+	provider = sdkmetric.NewMeterProvider(
+		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(
+			exporter, sdkmetric.WithInterval(10*time.Second),
+		)),
+		sdkmetric.WithResource(reso),
+	)
+	otel.SetMeterProvider(provider)
+
+	return provider.Meter(appName), exporter.Shutdown, nil
 }

@@ -9,8 +9,7 @@ replace github.com/d2jvkpn/gotk/ginx => ../ginx
 replace github.com/d2jvkpn/gotk/trace_error => ../trace_error
 
 require (
-	github.com/d2jvkpn/gotk v0.0.0-20240815124219-304b075b21e9
-	github.com/d2jvkpn/gotk/ginx v0.0.0-20240815124219-304b075b21e9
+	github.com/d2jvkpn/gotk/ginx v0.0.0-00010101000000-000000000000
 	github.com/d2jvkpn/gotk/trace_error v0.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.10.0
 	github.com/prometheus/client_golang v1.20.0
@@ -37,6 +36,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/d2jvkpn/gotk v0.0.0-20240815124219-304b075b21e9 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
 	github.com/gin-contrib/cors v1.7.2 // indirect
@@ -51,7 +51,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.21.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
