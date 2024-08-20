@@ -15,7 +15,7 @@ import (
 	"go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
-// without export to otel-collector
+// not export to otel-collector, but export metrics to promethus http handler(/metrics)
 func SetupOtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
 	var (
 		err      error
@@ -28,15 +28,18 @@ func SetupOtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.
 	}
 	provider = sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
 
-	//	if withRuntime {
-	//		err = runtime.Start(
-	//			runtime.WithMeterProvider(provider),
-	//			runtime.WithMinimumReadMemStatsInterval(15*time.Second),
-	//		)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//	}
+	/*
+		// promethus handleer will export runtime metrics by default
+		if withRuntime {
+			err = runtime.Start(
+				runtime.WithMeterProvider(provider),
+				runtime.WithMinimumReadMemStatsInterval(15*time.Second),
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+	*/
 
 	return provider.Meter(appName), nil
 }
