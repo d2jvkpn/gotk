@@ -12,12 +12,19 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	// "go.uber.org/zap/zapcore"
 )
 
-func NewAPILog(logger *zap.Logger, server string) (hf gin.HandlerFunc) {
+type Logger[T any] interface {
+	Info(string, ...T)
+	Warn(string, ...T)
+	Error(string, ...T)
+}
+
+func NewAPILog(logger Logger[zap.Field], debug bool, server string,
+	errHandlers ...func(string, float64, *trace_error.Error)) (hf gin.HandlerFunc) {
 	gomod, _ := gotk.RootModule()
-	debug := logger.Level() == zapcore.DebugLevel
+	// debug := logger.Level() == zapcore.DebugLevel
 
 	hf = func(ctx *gin.Context) {
 		var (
@@ -94,6 +101,10 @@ func NewAPILog(logger *zap.Logger, server string) (hf gin.HandlerFunc) {
 			default:
 				logger.Error(requestId, fields...)
 				// labelValues[0] = "500"
+			}
+
+			for i := range errHandlers {
+				errHandlers[i](api, latency, err)
 			}
 		}
 
