@@ -16,7 +16,7 @@ import (
 )
 
 // not export to otel-collector, but export metrics to promethus http handler(/metrics)
-func SetupOtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
+func OtelMetrics2Promethues(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
 	var (
 		err      error
 		exporter *otelprometheus.Exporter
@@ -45,7 +45,7 @@ func SetupOtelMetricsWithoutExport(appName string, vp *viper.Viper) (otelmetric.
 }
 
 // https://opentelemetry.io/docs/languages/go/getting-started/
-func SetupOtelMetrics(appName string, vp *viper.Viper, withRuntime bool) (
+func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 	otelmetric.Meter, func(context.Context) error, error) {
 	var (
 		err      error
