@@ -1,9 +1,9 @@
 package cloud
 
 import (
-	// "fmt"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -35,24 +35,24 @@ func OtelTracingGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValu
 
 	ctx = context.Background()
 	address = vp.GetString("address")
+	shutdown = func(context.Context) error { return nil }
 
-	//
+	// Not Recommended: grpc.WithBlock()
 	opts := []grpc.DialOption{grpc.WithTimeout(time.Second * 3)}
 	if !vp.GetBool("tls") {
 		opts = append(opts, grpc.WithInsecure())
 	}
 
 	if conn, err = grpc.DialContext(ctx, address, opts...); err != nil {
-		return nil, err
+		return shutdown, fmt.Errorf("OtelTracingGrpc: %w", err)
 	}
 
 	client = otlptracegrpc.NewClient(
 		otlptracegrpc.WithGRPCConn(conn),
-		otlptracegrpc.WithDialOption(grpc.WithBlock()),
 	)
 
 	if exporter, err = otlptrace.New(ctx, client); err != nil {
-		return nil, err
+		return shutdown, fmt.Errorf("OtelTracingGrpc: %w", err)
 	}
 
 	/*
@@ -85,7 +85,7 @@ func OtelTracingGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValu
 		resource.WithAttributes(attrs...),
 	)
 	if err != nil {
-		return nil, err
+		return shutdown, fmt.Errorf("OtelTracingGrpc: %w", err)
 	}
 
 	bsp := trace.NewBatchSpanProcessor(exporter)

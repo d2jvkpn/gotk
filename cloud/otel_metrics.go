@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/spf13/viper"
@@ -16,7 +17,7 @@ import (
 )
 
 // not export to otel-collector, but export metrics to promethus http handler(/metrics)
-func OtelMetrics2Promethues(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
+func OtelMetrics2Prom(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
 	var (
 		err      error
 		exporter *otelprometheus.Exporter
@@ -28,18 +29,15 @@ func OtelMetrics2Promethues(appName string, vp *viper.Viper) (otelmetric.Meter, 
 	}
 	provider = sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
 
-	/*
-		// promethus handleer will export runtime metrics by default
-		if withRuntime {
-			err = runtime.Start(
-				runtime.WithMeterProvider(provider),
-				runtime.WithMinimumReadMemStatsInterval(15*time.Second),
-			)
-			if err != nil {
-				return nil, err
-			}
-		}
-	*/
+	//	if withRuntime {
+	//		err = runtime.Start(
+	//			runtime.WithMeterProvider(provider),
+	//			runtime.WithMinimumReadMemStatsInterval(15*time.Second),
+	//		)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//	}
 
 	return provider.Meter(appName), nil
 }
@@ -57,14 +55,14 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 	)
 
 	ctx = context.Background()
-	// shutdown = func(context.Context) error { return nil }
+	shutdown = func(context.Context) error { return nil }
 
 	reso, err = resource.New(
 		ctx,
 		resource.WithAttributes(semconv.ServiceNameKey.String(appName)),
 	)
 	if err != nil {
-		return nil, nil, err // nil, shutdown, err
+		return nil, shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err) // nil, shutdown, err
 	}
 
 	opts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(vp.GetString("address"))}
@@ -73,7 +71,7 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 	}
 
 	if exporter, err = otlpmetricgrpc.New(ctx, opts...); err != nil {
-		return nil, nil, err // nil, shutdown, err
+		return nil, shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err) // nil, shutdown, err
 	}
 
 	provider = sdkmetric.NewMeterProvider(
@@ -90,7 +88,7 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 			runtime.WithMinimumReadMemStatsInterval(15*time.Second),
 		)
 		if err != nil {
-			return nil, shutdown, err
+			return nil, shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err)
 		}
 	}
 
