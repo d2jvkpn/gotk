@@ -11,6 +11,7 @@ require (
 	github.com/d2jvkpn/gotk/trace_error v0.0.0-00010101000000-000000000000
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.4.0
 	github.com/spf13/viper v1.19.0
 	go.uber.org/zap v1.27.0

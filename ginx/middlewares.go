@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Cors(origin string, methods string) gin.HandlerFunc {
+func Cors0(origin string, methods string) gin.HandlerFunc {
 	// methods: GET, POST, PUT, OPTIONS, HEAD
 	if origin == "" {
 		origin = "*"
@@ -43,7 +43,19 @@ func Cors(origin string, methods string) gin.HandlerFunc {
 	}
 }
 
-func Cors2(origins []string, maxAges ...time.Duration) gin.HandlerFunc {
+/*
+HTTP/1.1 204 No Content
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Headers: Origin,Content-Type,Authorization
+Access-Control-Allow-Methods: GET,POST,OPTIONS,HEAD
+Access-Control-Allow-Origin: http://localhost:5173
+Access-Control-Max-Age: 3600
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Date: Thu, 08 Aug 2024 00:18:50 GMT
+*/
+func Cors(origins []string, maxAges ...time.Duration) gin.HandlerFunc {
 	maxAge := 12 * time.Hour
 	if len(maxAges) > 0 {
 		maxAge = maxAges[0]

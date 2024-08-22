@@ -9,11 +9,11 @@ import (
 )
 
 type HttpConfig struct {
-	Path string `mapstructure:"path"`
-	Cors string `mapstructure:"cors"`
-	Tls  bool   `mapstructure:"tls"`
-	Cert string `mapstructure:"cert"`
-	Key  string `mapstructure:"key"`
+	Path         string   `mapstructure:"path"`
+	AllowOrigins []string `mapstructure:"allow_origins"`
+	Tls          bool     `mapstructure:"tls"`
+	Cert         string   `mapstructure:"cert"`
+	Key          string   `mapstructure:"key"`
 }
 
 func (self *HttpConfig) FromFile(fp string) (err error) {
@@ -46,10 +46,8 @@ func (self *HttpConfig) SetServer(server *http.Server) (err error) {
 	return nil
 }
 
-func (self *HttpConfig) SetEngine(engine *gin.Engine, methods string) {
-	if self.Cors != "" {
-		engine.Use(Cors(self.Cors, methods))
-	}
+func (self *HttpConfig) SetEngine(engine *gin.Engine) {
+	engine.Use(Cors(self.AllowOrigins))
 
 	router := &engine.RouterGroup
 	*router = *(router.Group(self.Path))

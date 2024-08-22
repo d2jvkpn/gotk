@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -17,6 +18,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func JSONStatic(data any) gin.HandlerFunc {
+	bts, _ := json.Marshal(data)
+
+	return func(ctx *gin.Context) {
+		ctx.Header("Content-Type", "application/json")
+		ctx.Writer.Write(bts)
+	}
+}
 
 // handle key: no_token, invalid_token, incorrect_token, User:XXXX
 func BasicAuth(username, password string, handle func(*gin.Context, string)) gin.HandlerFunc {

@@ -16,6 +16,7 @@ import (
 )
 
 type Logger[T any] interface {
+	Debug(string, ...T)
 	Info(string, ...T)
 	Warn(string, ...T)
 	Error(string, ...T)

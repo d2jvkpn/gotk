@@ -7,8 +7,9 @@ import (
 const (
 	GIN_RequestId = "GIN_RequestId"
 	GIN_Error     = "GIN_Error"
-	GIN_Identity  = "GIN_Identity" // string
-	GIN_Data      = "GIN_Data"     // map[string]any
+	GIN_AccountId = "GIN_AccountId" // string
+	GIN_Data      = "GIN_Data"      // map[string]any
+
 )
 
 func SetRequestId(ctx *gin.Context, requestId string) {
@@ -17,18 +18,6 @@ func SetRequestId(ctx *gin.Context, requestId string) {
 
 func SetError(ctx *gin.Context, err any) {
 	ctx.Set(GIN_Error, err)
-}
-
-func SetIdentity(ctx *gin.Context, kvs map[string]string) {
-	identity, e := Get[map[string]string](ctx, GIN_Identity)
-	if e != nil {
-		identity = make(map[string]string, 1)
-		ctx.Set(GIN_Identity, identity)
-	}
-
-	for k := range kvs {
-		identity[k] = kvs[k]
-	}
 }
 
 func SetData(ctx *gin.Context, kvs map[string]any) {
@@ -41,4 +30,18 @@ func SetData(ctx *gin.Context, kvs map[string]any) {
 	for k := range kvs {
 		data[k] = kvs[k]
 	}
+}
+
+func SetKV(ctx *gin.Context, key string, value any) {
+	var (
+		e    error
+		data map[string]any
+	)
+
+	if data, e = Get[map[string]any](ctx, GIN_Data); e != nil {
+		data = make(map[string]any, 1)
+		ctx.Set(GIN_Data, data)
+	}
+
+	data[key] = value
 }
