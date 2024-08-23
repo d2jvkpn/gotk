@@ -173,3 +173,60 @@ func TimeTag(at time.Time) string {
 	// fmt.Sprintf("%sT%s%s", at.Format(time.DateOnly), strings.Replaat.Format(time.TimeOnly), zone)
 	return at.Format("2006-01-02T15-03-04MST")
 }
+
+func TruncateHour(t ...time.Time) (start time.Time, end time.Time) {
+	var at time.Time
+
+	if len(t) > 0 {
+		at = t[0]
+	} else {
+		at = time.Now()
+	}
+
+	year, month, day := at.Date()
+	hour, _, _ := at.Clock()
+	// fmt.Println(now.Truncate(time.Hour))
+
+	start = time.Date(year, month, day, hour, 0, 0, 0, at.Location())
+	if hour == 23 {
+		end = time.Date(year, month, day, 0, 0, 0, 0, at.Location()).AddDate(0, 0, 1)
+	} else {
+		end = time.Date(year, month, day, hour+1, 0, 0, 0, at.Location())
+	}
+
+	return start, end
+}
+
+func TruncateDate(t ...time.Time) (start time.Time, end time.Time) {
+	var at time.Time
+
+	if len(t) > 0 {
+		at = t[0]
+	} else {
+		at = time.Now()
+	}
+
+	year, month, day := at.Date()
+
+	start = time.Date(year, month, day, 0, 0, 0, 0, at.Location())
+	end = start.AddDate(0, 0, 1)
+
+	return start, end
+}
+
+func TruncateMonth(t ...time.Time) (start time.Time, end time.Time) {
+	var at time.Time
+
+	if len(t) > 0 {
+		at = t[0]
+	} else {
+		at = time.Now()
+	}
+
+	year, month, _ := at.Date()
+
+	start = time.Date(year, month, 1, 0, 0, 0, 0, at.Location())
+	end = start.AddDate(0, 1, 0)
+
+	return start, end
+}
