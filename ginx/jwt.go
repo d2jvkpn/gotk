@@ -12,14 +12,16 @@ import (
 )
 
 type JwtHMAC struct {
-	Key              string        `mapstructure:"key"`
-	Duration         time.Duration `mapstructure:"duration"`
-	StaticExpiration bool          `mapstructure:"static_expiration"`
-	Method           uint          `mapstructure:"method"`
+	Key      string        `mapstructure:"key"`
+	Duration time.Duration `mapstructure:"duration"`
+	// set exp and validate it
+	StaticExpiration bool `mapstructure:"static_expiration"`
+	Method           uint `mapstructure:"method"`
 
-	key    []byte
-	issuer string
-	method *jwt.SigningMethodHMAC // SigningMethodHS{256,384,512}
+	key     []byte
+	issuer  string
+	method  *jwt.SigningMethodHMAC // SigningMethodHS{256,384,512}
+	options []jwt.ParserOption
 }
 
 func NewJwtHMAC(vp *viper.Viper, issuer string) (jh *JwtHMAC, err error) {
@@ -61,15 +63,27 @@ func NewJwtHMAC(vp *viper.Viper, issuer string) (jh *JwtHMAC, err error) {
 	}
 	jh.issuer = issuer
 
+	jh.options = []jwt.ParserOption{
+		jwt.WithValidMethods([]string{jh.method.Name}),
+		jwt.WithIssuer(jh.issuer),
+		jwt.WithIssuedAt(),
+	}
+	if jh.StaticExpiration {
+		jh.options = append(jh.options, jwt.WithExpirationRequired())
+	}
+
 	return jh, nil
 }
 
+// see jwt.RegisteredClaims
 type JwtData struct {
-	Issuer    string `json:"iss"` // *app_name
-	ID        string `json:"jti"` // *request_id
-	Subject   string `json:"sub"` // *account_id
-	IssuedAt  int64  `json:"iat"`
-	ExpiresAt int64  `json:"exp"`
+	Issuer    string   `json:"iss"` // required: *app_name
+	Subject   string   `json:"sub"` // required: *account_id
+	Audience  []string `json:"aud,omitempty"`
+	IssuedAt  int64    `json:"iat"` // required:
+	ExpiresAt int64    `json:"exp"` // required:
+	NotBefore int64    `json:"nbf,omitempty"`
+	ID        string   `json:"jti"` // required: *request_id
 
 	Data map[string]string `json:"_data"`
 	// TODO: platform
@@ -88,6 +102,7 @@ func (self *JwtHMAC) Sign(data *JwtData) (signed string, err error) {
 	claims = make(jwt.MapClaims, 6)
 
 	data.Issuer = self.issuer
+	fmt.Printf("==> %s, %s", now, now.Add(self.Duration))
 	data.IssuedAt = now.Unix()
 	data.ExpiresAt = now.Add(self.Duration).Unix()
 
@@ -141,16 +156,16 @@ func (self *JwtHMAC) ParsePayload(signed string) (data *JwtData, err error) {
 	if err = json.Unmarshal(bts, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)
 	}
+	fmt.Printf("==> data: %+v\n", data)
 
 	return data, nil
 }
 
 func (self *JwtHMAC) Auth(signed string) (data *JwtData, kind string, err error) {
 	var (
-		ok      bool
-		token   *jwt.Token
-		claims  jwt.MapClaims
-		options []jwt.ParserOption
+		ok     bool
+		token  *jwt.Token
+		claims jwt.MapClaims
 	)
 
 	keyfunc := func(token *jwt.Token) (any, error) {
@@ -163,16 +178,7 @@ func (self *JwtHMAC) Auth(signed string) (data *JwtData, kind string, err error)
 		return self.key, nil
 	}
 
-	options = []jwt.ParserOption{
-		jwt.WithValidMethods([]string{self.method.Name}),
-		jwt.WithIssuer(self.issuer),
-		jwt.WithIssuedAt(),
-	}
-	if self.StaticExpiration {
-		options = append(options, jwt.WithExpirationRequired())
-	}
-
-	if token, err = jwt.Parse(signed, keyfunc, options...); err != nil {
+	if token, err = jwt.Parse(signed, keyfunc, self.options...); err != nil {
 		errStr := err.Error()
 		err = fmt.Errorf("%w: %s", err, signed)
 
