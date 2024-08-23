@@ -80,8 +80,8 @@ func OtelTracingGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValu
 	reso, err = resource.New(ctx,
 		// resource.WithFromEnv(),
 		// resource.WithProcess(),
+		// resource.WithHost(),
 		resource.WithTelemetrySDK(),
-		resource.WithHost(),
 		resource.WithAttributes(attrs...),
 	)
 	if err != nil {
