@@ -13,10 +13,9 @@ import (
 
 type JwtHMAC struct {
 	Key      string        `mapstructure:"key"`
+	Interval time.Duration `mapstructure:"interval"` // dynamic refresh token ttl in cache
 	Duration time.Duration `mapstructure:"duration"`
-	// set exp and validate it
-	StaticExpiration bool `mapstructure:"static_expiration"`
-	Method           uint `mapstructure:"method"`
+	Method   uint          `mapstructure:"method"`
 
 	key     []byte
 	issuer  string
@@ -47,7 +46,11 @@ func NewJwtHMAC(vp *viper.Viper, issuer string) (jh *JwtHMAC, err error) {
 	}
 	jh.key = []byte(jh.Key)
 
-	if jh.Duration < time.Minute {
+	if jh.Interval < 0 {
+		return nil, fmt.Errorf("invalid interval")
+	}
+
+	if jh.Duration < 0 {
 		return nil, fmt.Errorf("invalid duration")
 	}
 
@@ -68,7 +71,7 @@ func NewJwtHMAC(vp *viper.Viper, issuer string) (jh *JwtHMAC, err error) {
 		jwt.WithIssuer(jh.issuer),
 		jwt.WithIssuedAt(),
 	}
-	if jh.StaticExpiration {
+	if jh.Duration > 0 {
 		jh.options = append(jh.options, jwt.WithExpirationRequired())
 	}
 
@@ -102,7 +105,7 @@ func (self *JwtHMAC) Sign(data *JwtData) (signed string, err error) {
 	claims = make(jwt.MapClaims, 6)
 
 	data.Issuer = self.issuer
-	fmt.Printf("==> %s, %s", now, now.Add(self.Duration))
+	// fmt.Printf("==> %s, %s", now, now.Add(self.Duration))
 	data.IssuedAt = now.Unix()
 	data.ExpiresAt = now.Add(self.Duration).Unix()
 
@@ -111,7 +114,7 @@ func (self *JwtHMAC) Sign(data *JwtData) (signed string, err error) {
 	claims["sub"] = data.Subject
 	claims["iat"] = data.IssuedAt
 
-	if self.StaticExpiration {
+	if self.Duration > 0 {
 		claims["exp"] = data.ExpiresAt
 	} else {
 		claims["exp"] = 0
