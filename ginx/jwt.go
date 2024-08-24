@@ -105,7 +105,6 @@ func (self *JwtHMAC) Sign(data *JwtData) (signed string, err error) {
 	claims = make(jwt.MapClaims, 6)
 
 	data.Issuer = self.issuer
-	// fmt.Printf("==> %s, %s", now, now.Add(self.Duration))
 	data.IssuedAt = now.Unix()
 	data.ExpiresAt = now.Add(self.Duration).Unix()
 
@@ -121,7 +120,6 @@ func (self *JwtHMAC) Sign(data *JwtData) (signed string, err error) {
 	}
 
 	claims["_data"] = data.Data
-	// fmt.Printf("~~~ claims: %v\n", claims)
 
 	token = jwt.NewWithClaims(self.method, claims)
 
@@ -140,7 +138,6 @@ func (self *JwtHMAC) ParsePayload(signed string) (data *JwtData, err error) {
 	)
 
 	token = strings.SplitN(signed, ".", 3)
-	// fmt.Println("~~~", token)
 	if len(token) != 3 {
 		return nil, fmt.Errorf("invalid token")
 	}
@@ -149,7 +146,6 @@ func (self *JwtHMAC) ParsePayload(signed string) (data *JwtData, err error) {
 	if i := len(payload) % 4; i != 0 {
 		payload += strings.Repeat("=", 4-i)
 	}
-	// fmt.Printf("~~~ payload: %s\n", payload)
 
 	if bts, err = base64.StdEncoding.DecodeString(payload); err != nil {
 		return nil, fmt.Errorf("base64: %w", err)
@@ -159,7 +155,6 @@ func (self *JwtHMAC) ParsePayload(signed string) (data *JwtData, err error) {
 	if err = json.Unmarshal(bts, &data); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)
 	}
-	fmt.Printf("==> data: %+v\n", data)
 
 	return data, nil
 }
@@ -196,7 +191,6 @@ func (self *JwtHMAC) Auth(signed string) (data *JwtData, kind string, err error)
 	if !token.Valid {
 		return nil, "invalid_token", err
 	}
-	// fmt.Printf("~~~ token: %+v\n", token)
 
 	if claims, ok = token.Claims.(jwt.MapClaims); !ok {
 		return nil, "invalid_token", err
