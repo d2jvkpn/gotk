@@ -151,3 +151,14 @@ func PickSomeIndex[T any](items []T, num int) (ans []int) {
 
 	return ans
 }
+
+func NewSliceWith[T any](item T, caps ...int) (slice []T) {
+	if len(caps) > 0 { // caps[0] > 0
+		slice = make([]T, 0, caps[0])
+	} else {
+		slice = make([]T, 0, 1)
+	}
+
+	slice = append(slice, item)
+	return slice
+}
