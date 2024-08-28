@@ -18,7 +18,7 @@ func PromMetricsAPI() (func(string, float64, *trace_error.Error), error) {
 	// http_code, http response code summary
 	codeCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "http_code",
+			Name: "http_code_total",
 			Help: "HTTP response code and kind counter",
 		},
 		[]string{"code", "kind"},
