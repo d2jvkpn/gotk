@@ -21,7 +21,7 @@ func PromMetricsAPI() (func(string, float64, *trace_error.Error), error) {
 			Name: "http_code_total",
 			Help: "HTTP response code and kind counter",
 		},
-		[]string{"code", "kind"},
+		[]string{"code", "kind", "api"},
 	)
 
 	requestLatency = prometheus.NewHistogramVec(
