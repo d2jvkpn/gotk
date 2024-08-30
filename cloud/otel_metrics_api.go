@@ -36,12 +36,12 @@ func OtelMetricsAPI(meter otelmetric.Meter) (func(string, float64, *trace_error.
 	}
 
 	return func(api string, latency float64, err *trace_error.Error) {
-		var labelValues [2]string
+		var labelValues [3]string
 
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 
-		labelValues[0], labelValues[1] = "OK", ""
+		labelValues[0], labelValues[1], labelValues[2] = "OK", "", api
 		if err != nil {
 			labelValues[0], labelValues[1] = err.Code, err.Kind
 		}
@@ -49,6 +49,7 @@ func OtelMetricsAPI(meter otelmetric.Meter) (func(string, float64, *trace_error.
 		codeCounter.Add(ctx, 1, otelmetric.WithAttributes(
 			attribute.Key("code").String(labelValues[0]),
 			attribute.Key("kind").String(labelValues[1]),
+			attribute.Key("api").String(labelValues[2]),
 		))
 
 		requestLatency.Record(ctx, latency, otelmetric.WithAttributes(
