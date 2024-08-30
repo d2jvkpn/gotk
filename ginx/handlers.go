@@ -201,3 +201,23 @@ func WsUpgrade(ctx *gin.Context) {
 
 	ctx.Next()
 }
+
+func ResponseFile(ctx *gin.Context, buf *bytes.Buffer, filename, typ string) {
+	var contextType string
+
+	switch typ {
+	case "xls", "xlsx":
+		contextType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	case "doc", "docx":
+		contextType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	case "pdf":
+		contextType = "application/pdf"
+	default:
+		contextType = "application/octet-stream"
+	}
+
+	// ctx.Header("Content-Description", "File Transfer")
+	ctx.Header("Content-Disposition", "attachment; filename="+filename)
+
+	ctx.Data(http.StatusOK, contextType, buf.Bytes())
+}
