@@ -2,7 +2,7 @@ package cloud
 
 import (
 	"context"
-	"fmt"
+	// "fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -39,7 +39,7 @@ func (inte *LogServer) Unary() grpc.UnaryServerInterceptor {
 		inte.logger.Debug(info.FullMethod, zap.Any("metadata", md))
 
 		resp, err = handler(ctx, req)
-		latency := zap.String("latency", fmt.Sprintf("%s", time.Since(start)))
+		latency := zap.Float64("latencyMs", float64(time.Since(start).Microseconds())/1e3)
 
 		if err == nil {
 			inte.logger.Info(info.FullMethod, latency)
@@ -72,7 +72,7 @@ func (inte *LogServer) Stream() grpc.StreamServerInterceptor {
 		inte.logger.Debug(info.FullMethod, zap.Any("metadata", md))
 
 		err = handler(srv, ss)
-		latency := zap.String("latency", fmt.Sprintf("%s", time.Since(start)))
+		latency := zap.Float64("latencyMs", float64(time.Since(start).Microseconds())/1e3)
 
 		if err == nil {
 			inte.logger.Info(info.FullMethod, latency)

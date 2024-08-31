@@ -8,11 +8,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-type Logger struct {
+type HeaderInterceptor struct {
 	Headers map[string]string
 }
 
-func (inte *Logger) addHeaders(ctx context.Context) context.Context {
+func (inte *HeaderInterceptor) addHeaders(ctx context.Context) context.Context {
 	kv := make([]string, 0, len(inte.Headers)*2)
 
 	for k, v := range inte.Headers {
@@ -22,7 +22,7 @@ func (inte *Logger) addHeaders(ctx context.Context) context.Context {
 	return metadata.AppendToOutgoingContext(ctx, kv...)
 }
 
-func (inte *Logger) Unary() grpc.UnaryClientInterceptor {
+func (inte *HeaderInterceptor) Unary() grpc.UnaryClientInterceptor {
 	return func(
 		ctx context.Context, method string, req, reply any,
 		cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption,
@@ -31,7 +31,7 @@ func (inte *Logger) Unary() grpc.UnaryClientInterceptor {
 	}
 }
 
-func (inte *Logger) Stream() grpc.StreamClientInterceptor {
+func (inte *HeaderInterceptor) Stream() grpc.StreamClientInterceptor {
 	return func(
 		ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn,
 		method string, streamer grpc.Streamer, opts ...grpc.CallOption,
