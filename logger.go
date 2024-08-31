@@ -9,7 +9,7 @@ import (
 )
 
 // customize yourself, no concurrency safety guaranteed
-type LogIntf interface {
+type Logger interface {
 	// Trace(string, ...any)
 	Debug(string, ...any)
 	Info(string, ...any)
@@ -46,10 +46,6 @@ func (logger *DefaultLogger) Printf(format string, a ...any) (n int, err error) 
 	}
 
 	return
-}
-
-func (logger *DefaultLogger) Trace(format string, a ...any) {
-	logger.Printf(" [TRACE] "+format, a...)
 }
 
 func (logger *DefaultLogger) Debug(format string, a ...any) {

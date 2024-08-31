@@ -12,15 +12,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type GrpcSrvLogger struct {
+type LogServer struct {
 	logger *zap.Logger
 }
 
-func NewGrpcSrvLogger(logger *zap.Logger) *GrpcSrvLogger {
-	return &GrpcSrvLogger{logger: logger}
+func NewLogServer(logger *zap.Logger) *LogServer {
+	return &LogServer{logger: logger}
 }
 
-func (inte *GrpcSrvLogger) Unary() grpc.UnaryServerInterceptor {
+func (inte *LogServer) Unary() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (
 		resp any, err error) {
@@ -33,10 +33,10 @@ func (inte *GrpcSrvLogger) Unary() grpc.UnaryServerInterceptor {
 
 		start = time.Now()
 		if md, ok = metadata.FromIncomingContext(ctx); !ok {
-			return nil, status.Errorf(codes.Unauthenticated, "no netadata")
+			return nil, status.Errorf(codes.Unauthenticated, "no metadata")
 		}
 
-		inte.logger.Debug(info.FullMethod, zap.Any("md", md))
+		inte.logger.Debug(info.FullMethod, zap.Any("metadata", md))
 
 		resp, err = handler(ctx, req)
 		latency := zap.String("latency", fmt.Sprintf("%s", time.Since(start)))
@@ -53,7 +53,7 @@ func (inte *GrpcSrvLogger) Unary() grpc.UnaryServerInterceptor {
 	// return grpc.UnaryInterceptor(call) // grpc.ServerOption
 }
 
-func (inte *GrpcSrvLogger) Stream() grpc.StreamServerInterceptor {
+func (inte *LogServer) Stream() grpc.StreamServerInterceptor {
 	return func(
 		srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler,
 	) (err error) {
@@ -66,10 +66,10 @@ func (inte *GrpcSrvLogger) Stream() grpc.StreamServerInterceptor {
 
 		start = time.Now()
 		if md, ok = metadata.FromIncomingContext(ss.Context()); !ok {
-			return status.Errorf(codes.Unauthenticated, "no netadata")
+			return status.Errorf(codes.Unauthenticated, "no metadata")
 		}
 
-		inte.logger.Debug(info.FullMethod, zap.Any("md", md))
+		inte.logger.Debug(info.FullMethod, zap.Any("metadata", md))
 
 		err = handler(srv, ss)
 		latency := zap.String("latency", fmt.Sprintf("%s", time.Since(start)))

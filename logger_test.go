@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestLogIntf(t *testing.T) {
-	var logger LogIntf
+func TestLogger(t *testing.T) {
+	var logger Logger
 
 	logger = NewDefaultLogger(nil, true)
 
