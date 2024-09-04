@@ -44,3 +44,7 @@ func GetDate(ctx *gin.Context) (*time.Time, error) {
 
 	return &ans, nil
 }
+
+func GetAPI(ctx *gin.Context) string {
+	return fmt.Sprintf("%s@%s", ctx.Request.Method, ctx.Request.URL.Path)
+}
