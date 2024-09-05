@@ -2,13 +2,9 @@ module github.com/d2jvkpn/gotk/ginx
 
 go 1.23
 
-replace github.com/d2jvkpn/gotk => ../
-
-replace github.com/d2jvkpn/gotk/trace_error => ../trace_error
-
 require (
-	github.com/d2jvkpn/gotk v0.0.0-20240813045800-bd7582bda75b
-	github.com/d2jvkpn/gotk/trace_error v0.0.0-00010101000000-000000000000
+	github.com/d2jvkpn/gotk v0.0.0-20240904141745-c713719cb5f6
+	github.com/d2jvkpn/gotk/trace_error v0.0.0-20240904141745-c713719cb5f6
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.22.0
