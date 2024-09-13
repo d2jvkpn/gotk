@@ -50,8 +50,9 @@ func NewAPILog(logger Logger[zap.Field], debug bool, server string,
 
 		start = time.Now()
 		requestId = uuid.New().String()
-		ctx.Set("RequestId", requestId) // CONTEXT_RequestId
-		ctx.Header("x-server", server)  // HEADER_Server
+		// ctx.Set("RequestId", requestId) // CONTEXT_RequestId
+		ctx.Header("x-request-id", requestId)
+		ctx.Header("x-server", server) // HEADER_Server
 
 		// HEADER_Client
 		// client := ctx.GetHeader("x-client")
