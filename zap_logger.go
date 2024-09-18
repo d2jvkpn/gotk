@@ -25,7 +25,7 @@ func NewZapLogger(filename string, level zapcore.LevelEnabler, size_mb int, skip
 	var ws zapcore.WriteSyncer
 
 	if filename != "" && size_mb <= 0 {
-		return nil, fmt.Errorf("invalid filename or size_mb")
+		return nil, fmt.Errorf("invalid size_mb")
 	}
 
 	logger = new(ZapLogger)
