@@ -16,8 +16,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// a replace of gin.WrapH(promhttp.Handler())
+func PromHandler() gin.HandlerFunc {
+	return gin.WrapH(promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
+}
 
 func JSONStatic(data any) gin.HandlerFunc {
 	bts, _ := json.Marshal(data)
