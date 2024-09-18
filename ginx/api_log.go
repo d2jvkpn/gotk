@@ -4,7 +4,7 @@ import (
 	// "errors"
 	"fmt"
 	"net/http"
-	"os"
+	// "os"
 	"time"
 
 	"github.com/d2jvkpn/gotk"
@@ -116,13 +116,6 @@ func NewAPILog(logger Logger[zap.Field], debug bool, server string,
 				panicErr  *trace_error.Error
 			)
 
-			if debug && err != nil {
-				fmt.Fprintf(
-					os.Stderr, "==> http_log error: %s@%s, %s, %+v, %s\n",
-					ctx.Request.Method, ctx.Request.URL.Path, requestId, err, err.Trace(),
-				)
-			}
-
 			if panicData = recover(); panicData == nil {
 				return
 			}
@@ -138,11 +131,6 @@ func NewAPILog(logger Logger[zap.Field], debug bool, server string,
 
 			stacks := gotk.Stack(gomod)
 			panicField = map[string]any{"error": panicErr, "data": &panicData, "stacks": stacks}
-
-			fmt.Fprintf(
-				os.Stderr,
-				"!!! http_log panic: %s, %v; %s\n", requestId, panicData, stacks,
-			)
 
 			final()
 		}()

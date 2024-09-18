@@ -2,6 +2,7 @@ package gotk
 
 import (
 	"fmt"
+	"os"
 	// "io"
 	"errors"
 
@@ -17,22 +18,31 @@ type ZapLogger struct {
 	*zap.Logger
 }
 
+// if filename is empty, send log to stdout
 func NewZapLogger(filename string, level zapcore.LevelEnabler, size_mb int, skips ...int) (
 	logger *ZapLogger, err error) {
 
-	if filename == "" || size_mb <= 0 {
+	var ws zapcore.WriteSyncer
+
+	if filename != "" && size_mb <= 0 {
 		return nil, fmt.Errorf("invalid filename or size_mb")
 	}
 
 	logger = new(ZapLogger)
 
-	logger.Writer = &lumberjack.Logger{
-		Filename:  filename,
-		LocalTime: true,
-		MaxSize:   size_mb, // megabytes
-		// MaxBackups: 3,
-		// MaxAge:     1, // days
-		// Compress:   true, // disabled by default
+	if filename != "" {
+		logger.Writer = &lumberjack.Logger{
+			Filename:  filename,
+			LocalTime: true,
+			MaxSize:   size_mb, // megabytes
+			// MaxBackups: 3,
+			// MaxAge:     1, // days
+			// Compress:   true, // disabled by default
+		}
+
+		ws = zapcore.AddSync(logger.Writer)
+	} else {
+		ws = zapcore.AddSync(os.Stdout)
 	}
 
 	logger.config = zapcore.EncoderConfig{
@@ -51,7 +61,7 @@ func NewZapLogger(filename string, level zapcore.LevelEnabler, size_mb int, skip
 	// zap.InfoLevel, zapcore.BufferedWriteSyncer
 	logger.core = zapcore.NewCore(
 		zapcore.NewJSONEncoder(logger.config),
-		zapcore.AddSync(logger.Writer),
+		ws,
 		level,
 	)
 
@@ -82,11 +92,13 @@ func (logger *ZapLogger) Down() (err error) {
 
 	errs = make([]error, 0, 2)
 	if err = logger.Sync(); err != nil {
-		errs = append(errs, fmt.Errorf("Logger.Sync: %w", err))
+		errs = append(errs, fmt.Errorf("sync: %w", err))
 	}
 
-	if err = logger.Writer.Close(); err != nil {
-		errs = append(errs, fmt.Errorf("Logger.Writer.Close: %w", err))
+	if logger.Writer != nil {
+		if err = logger.Writer.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("close: %w", err))
+		}
 	}
 
 	return errors.Join(errs...)
