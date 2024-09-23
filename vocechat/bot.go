@@ -41,6 +41,10 @@ func NewBot(fp string, keys ...string) (bot *Bot, err error) {
 	vp.SetDefault("timeout", "5s")
 	vp.SetDefault("user_agent", "Mozilla/5.0 Gecko/20100101 Firefox/130.0")
 
+	return BotFromViper(vp, keys...)
+}
+
+func BotFromViper(vp *viper.Viper, keys ...string) (bot *Bot, err error) {
 	bot = new(Bot)
 
 	if len(keys) > 0 {

@@ -9,13 +9,14 @@ import (
 
 func TestBot(t *testing.T) {
 	var (
-		fp  string
+		// fp  string
 		err error
 		bot *Bot
 	)
 
-	fp = "configs/vocechat.yaml"
-	bot, err = NewBot(fp)
+	// fp = "configs/local.yaml"
+	// bot, err = NewBot(fp)
+	bot, err = BotFromViper(_TestConfig)
 	require.Nil(t, err)
 
 	_, err = bot.SendMsg("user", "Hello! My name is d2jvkpn")
