@@ -10,6 +10,23 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+type User struct {
+	Server        string        `mapstructure:"server"`
+	Timeout       time.Duration `mapstructure:"timeout"`
+	TlsSkipVerify bool          `mapstructure:"tls_skip_verify"`
+	UserAgent     string        `mapstructure:"user_agent"`
+
+	User struct {
+		Email    string `mapstructure:"email"`
+		Password string `mapstructure:"password"`
+
+		SendToUser  uint32 `mapstructure:"send_to_user"`
+		SendToGroup uint32 `mapstructure:"send_to_group"`
+	} `mapstructure:"bot"`
+
+	*http.Client
+}
+
 func (client *Client) UserSend(msg string) (err error) {
 	var (
 		bts      []byte

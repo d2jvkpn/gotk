@@ -7,18 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBot(t *testing.T) {
+func TestClient(t *testing.T) {
 	var (
 		// fp  string
-		err error
-		bot *Bot
+		err    error
+		client *Client
 	)
 
 	// fp = "configs/local.yaml"
 	// bot, err = NewBot(fp)
-	bot, err = BotFromViper(_TestConfig)
+	client, err = ClientFromViper(_TestConfig)
 	require.Nil(t, err)
 
-	_, err = bot.SendMsg("user", "Hello! My name is d2jvkpn")
+	_, err = client.BotSendMsg("user", "Hello! My name is d2jvkpn", 1)
 	require.Nil(t, err)
 }

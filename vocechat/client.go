@@ -11,23 +11,23 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Bot struct {
+type Client struct {
 	Server        string        `mapstructure:"server"`
 	Timeout       time.Duration `mapstructure:"timeout"`
 	TlsSkipVerify bool          `mapstructure:"tls_skip_verify"`
 	UserAgent     string        `mapstructure:"user_agent"`
 
-	Bot struct {
-		ApiKey string `mapstructure:"api_key"`
+	// bot
+	ApiKey string `mapstructure:"api_key"`
 
-		SendToUser  uint32 `mapstructure:"send_to_user"`
-		SendToGroup uint32 `mapstructure:"send_to_group"`
-	} `mapstructure:"bot"`
+	// user
+	Email    string `mapstructure:"email"`
+	Password string `mapstructure:"password"`
 
 	*http.Client
 }
 
-func NewBot(fp string, keys ...string) (bot *Bot, err error) {
+func NewClient(fp string, keys ...string) (client *Client, err error) {
 	var vp *viper.Viper
 
 	vp = viper.New()
@@ -41,46 +41,43 @@ func NewBot(fp string, keys ...string) (bot *Bot, err error) {
 	vp.SetDefault("timeout", "5s")
 	vp.SetDefault("user_agent", "Mozilla/5.0 Gecko/20100101 Firefox/130.0")
 
-	return BotFromViper(vp, keys...)
+	return ClientFromViper(vp, keys...)
 }
 
-func BotFromViper(vp *viper.Viper, keys ...string) (bot *Bot, err error) {
-	bot = new(Bot)
+func ClientFromViper(vp *viper.Viper, keys ...string) (client *Client, err error) {
+	client = new(Client)
 
 	if len(keys) > 0 {
-		err = vp.UnmarshalKey(keys[0], bot)
+		err = vp.UnmarshalKey(keys[0], client)
 	} else {
-		err = vp.Unmarshal(bot)
+		err = vp.Unmarshal(client)
 	}
 
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
 
-	if bot.Server = strings.TrimRight(bot.Server, "/"); bot.Server == "" {
+	if client.Server = strings.TrimRight(client.Server, "/"); client.Server == "" {
 		return nil, errors.New("empty server")
 	}
-	if bot.Bot.ApiKey == "" {
-		return nil, errors.New("api_key is empty")
-	}
-	if bot.Timeout < 0 {
-		return nil, fmt.Errorf("invalid timeout: %v", bot.Timeout)
+	if client.Timeout < 0 {
+		return nil, fmt.Errorf("invalid timeout: %v", client.Timeout)
 	}
 
-	bot.Client = new(http.Client)
-	bot.Client.Timeout = bot.Timeout
+	client.Client = new(http.Client)
+	client.Client.Timeout = client.Timeout
 
-	if bot.TlsSkipVerify {
-		bot.Client.Transport = &http.Transport{
+	if client.TlsSkipVerify {
+		client.Client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, InsecureSkipVerify: true},
 		}
 	}
 
-	return bot, nil
+	return client, nil
 }
 
 // kind=["invalid_parameter", "request", "response", "ok"]
-func (self *Bot) SendMsg(typ, msg string) (kind string, err error) {
+func (self *Client) BotSendMsg(typ, msg string, targetId uint) (kind string, err error) {
 	var (
 		p        string
 		reader   *strings.Reader
@@ -92,15 +89,16 @@ func (self *Bot) SendMsg(typ, msg string) (kind string, err error) {
 		return "invalid_parameter", errors.New("msg is empty")
 	}
 
+	if targetId <= 0 {
+		return "invalid_parameter", errors.New("invalid targetId")
+	}
+
+	if self.ApiKey == "" {
+		return "invalid_parameter", errors.New("api_key is empty")
+	}
+
 	switch typ {
-	case "user":
-		if self.Bot.SendToUser <= 0 {
-			return "invalid_parameter", errors.New("bot.send_to_user is empty")
-		}
-	case "group":
-		if self.Bot.SendToGroup <= 0 {
-			return "invalid_parameter", errors.New("bot.send_to_group is empty")
-		}
+	case "user", "group":
 	default:
 		return "invalid_parameter", errors.New("invalid type")
 	}
@@ -108,9 +106,9 @@ func (self *Bot) SendMsg(typ, msg string) (kind string, err error) {
 	reader = strings.NewReader(msg)
 
 	if typ == "user" {
-		p = fmt.Sprintf("%s/api/bot/send_to_user/%d", self.Server, self.Bot.SendToUser)
+		p = fmt.Sprintf("%s/api/bot/send_to_user/%d", self.Server, targetId)
 	} else {
-		p = fmt.Sprintf("%s/api/bot/send_to_group/%d", self.Server, self.Bot.SendToGroup)
+		p = fmt.Sprintf("%s/api/bot/send_to_group/%d", self.Server, targetId)
 	}
 
 	if request, err = http.NewRequest("POST", p, reader); err != nil {
@@ -120,7 +118,7 @@ func (self *Bot) SendMsg(typ, msg string) (kind string, err error) {
 	request.Header.Set("Origin", self.Server)
 	request.Header.Set("User-Agent", self.UserAgent)
 
-	request.Header.Set("X-API-Key", self.Bot.ApiKey)
+	request.Header.Set("X-API-Key", self.ApiKey)
 
 	if response, err = self.Do(request); err != nil {
 		return "request", err
