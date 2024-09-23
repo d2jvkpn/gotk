@@ -75,6 +75,7 @@ func NewBot(fp string, keys ...string) (bot *Bot, err error) {
 	return bot, nil
 }
 
+// kind=["invalid_parameter", "request", "response", "ok"]
 func (self *Bot) SendMsg(typ, msg string) (kind string, err error) {
 	var (
 		p        string
@@ -109,7 +110,7 @@ func (self *Bot) SendMsg(typ, msg string) (kind string, err error) {
 	}
 
 	if request, err = http.NewRequest("POST", p, reader); err != nil {
-		return "create_request", err
+		return "invalid_parameter", err
 	}
 	request.Header.Set("Content-Type", "text/plain")
 	request.Header.Set("Origin", self.Server)
@@ -118,12 +119,12 @@ func (self *Bot) SendMsg(typ, msg string) (kind string, err error) {
 	request.Header.Set("X-API-Key", self.Bot.ApiKey)
 
 	if response, err = self.Do(request); err != nil {
-		return "request_failed", err
+		return "request", err
 	}
 	response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return "respone_failed", fmt.Errorf("send response: %d", response.StatusCode)
+		return "respone", fmt.Errorf("response: %d", response.StatusCode)
 	}
 
 	return "ok", nil
