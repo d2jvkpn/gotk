@@ -80,8 +80,8 @@ func (self *Command) Usage() {
 	text = `usage:
 - {{.App}} [command]
 
-commands: {{range .Subcommands}}- {{.Name}}: {{.Help}}
-{{end}}`
+commands: {{range .Subcommands}}
+- {{.Name}}: {{.Help}}{{end}}`
 
 	templ, _ = template.New("usage").Parse(text)
 	_ = templ.Execute(os.Stderr, self)
