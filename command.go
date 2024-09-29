@@ -3,6 +3,7 @@ package gotk
 import (
 	"fmt"
 	"os"
+	"strings"
 	"text/template"
 
 	"github.com/spf13/viper"
@@ -71,7 +72,7 @@ func (self *Command) Find(name string) *Subcommand {
 	return nil
 }
 
-func (self *Command) Usage() {
+func (self *Command) Usage0() {
 	var (
 		text  string
 		templ *template.Template
@@ -90,4 +91,23 @@ commands: {{range .Subcommands}}
 	if meta := self.Project.GetStringMap("meta"); len(meta) > 0 {
 		fmt.Printf("\nmeta:\n%s\n", BuildInfoText(meta, "  "))
 	}
+}
+
+func (self *Command) Usage() {
+	var builder strings.Builder
+
+	builder.WriteString(fmt.Sprintf("usage:\n- %s [command]\n\n", self.App))
+
+	builder.WriteString("\ncommands:\n")
+	for _, v := range self.Subcommands {
+		builder.WriteString(fmt.Sprintf("- %s: %s\n", v.Name, v.Help))
+	}
+	builder.WriteString("\n")
+
+	if meta := self.Project.GetStringMap("meta"); len(meta) > 0 {
+		builder.WriteString("meta:\n")
+		builder.WriteString(BuildInfoText(meta, "  "))
+	}
+
+	fmt.Println(builder.String())
 }
