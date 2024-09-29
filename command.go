@@ -98,7 +98,7 @@ func (self *Command) Usage() {
 
 	builder.WriteString(fmt.Sprintf("usage:\n  %s [command]\n\n", self.App))
 
-	builder.WriteString("\ncommands:\n")
+	builder.WriteString("commands:\n")
 	for _, v := range self.Subcommands {
 		builder.WriteString(fmt.Sprintf("  %s: %s\n", v.Name, v.Help))
 	}
