@@ -17,6 +17,9 @@ func ExitChan(errCh chan error, shutdown func() error) (err error) {
 	)
 
 	logger = slog.New(slog.NewJSONHandler(os.Stderr, nil))
+	if shutdown == nil {
+		shutdown = func() error { return nil }
+	}
 
 	sigCh = make(chan os.Signal)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
