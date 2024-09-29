@@ -2,20 +2,41 @@ package gotk
 
 import (
 	// "fmt"
+	"bytes"
 	"os"
 	"text/template"
+
+	"github.com/spf13/viper"
 )
 
-func NewCommand(app string) *Command {
+type Command struct {
+	App         string       `json:"app"`
+	Project     *viper.Viper `json:"project"`
+	Subcommands []Subcommand `json:"subcommands"`
+}
+
+func NewCommand(app string) (command *Command) {
 	return &Command{
 		App:         app,
+		Project:     viper.New(),
 		Subcommands: make([]Subcommand, 0),
 	}
 }
 
-type Command struct {
-	App         string       `json:"app"`
-	Subcommands []Subcommand `json:"subcommands"`
+func (self *Command) ProjectFromBts(bts []byte) (err error) {
+	var meta map[string]any
+
+	// _Project.ReadConfig(strings.NewReader(str))
+	if err = self.Project.ReadConfig(bytes.NewReader(bts)); err != nil {
+		return err
+	}
+
+	meta = BuildInfo()
+	meta["app_name"] = self.Project.GetString("app_name")
+	meta["app_version"] = self.Project.GetString("app_version")
+	self.Project.Set("meta", meta)
+
+	return nil
 }
 
 type Subcommand struct {
@@ -47,12 +68,14 @@ func (self *Command) Execute(args []string) {
 	}
 }
 
-func (self *Command) AddCmd(name, help string, run func([]string)) {
+func (self *Command) AddCmd(name, help string, run func([]string)) *Command {
 	self.Subcommands = append(self.Subcommands, Subcommand{
 		Name: name,
 		Help: help,
 		Run:  run,
 	})
+
+	return self
 }
 
 func (self *Command) Find(name string) *Subcommand {
