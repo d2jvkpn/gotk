@@ -1,8 +1,8 @@
 package gotk
 
 import (
-	// "fmt"
 	"bytes"
+	"fmt"
 	"os"
 	"text/template"
 
@@ -103,4 +103,6 @@ commands: {{range .Subcommands}}
 
 	templ, _ = template.New("usage").Parse(text)
 	_ = templ.Execute(os.Stderr, self)
+
+	fmt.Printf("\nmeta:\n%s\n", BuildInfoText(self.Project.GetStringMap("meta")))
 }
