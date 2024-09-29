@@ -14,8 +14,10 @@ func ProjectFromBytes(bts []byte) (project *viper.Viper, err error) {
 	project.SetConfigType("yaml")
 	project.SetConfigName("project")
 
-	if err = project.ReadConfig(bytes.NewReader(bts)); err != nil {
-		return nil, err
+	if len(bts) > 0 {
+		if err = project.ReadConfig(bytes.NewReader(bts)); err != nil {
+			return nil, err
+		}
 	}
 
 	meta = BuildInfo()

@@ -35,11 +35,20 @@ func BuildInfo() (info map[string]any) {
 	return info
 }
 
-func BuildInfoText(info map[string]any) string {
-	strs := make([]string, 0, len(info))
+func BuildInfoText(info map[string]any, pList ...string) string {
+	var (
+		strs []string
+		p    string
+	)
+
+	if len(pList) > 0 {
+		p = pList[0]
+	}
+
+	strs = make([]string, 0, len(info))
 	for k, v := range info {
 		// strs = append(strs, fmt.Sprintf("%s: %v", strings.Title(k), v))
-		strs = append(strs, fmt.Sprintf("%s: %v", k, v))
+		strs = append(strs, fmt.Sprintf("%s%s: %v", p, k, v))
 	}
 
 	sort.Strings(strs)

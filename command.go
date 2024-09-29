@@ -88,6 +88,6 @@ commands: {{range .Subcommands}}
 	_ = templ.Execute(os.Stderr, self)
 
 	if meta := self.Project.GetStringMap("meta"); len(meta) > 0 {
-		fmt.Printf("\nmeta:\n%s\n", BuildInfoText(meta))
+		fmt.Printf("\nmeta:\n%s\n", BuildInfoText(meta, "  "))
 	}
 }
