@@ -47,8 +47,12 @@ func (self *Command) Execute(args []string) {
 	}
 }
 
-func (self *Command) AddCmd(subcommand Subcommand) {
-	self.Subcommands = append(self.Subcommands, subcommand)
+func (self *Command) AddCmd(name, help string, run func([]string)) {
+	self.Subcommands = append(self.Subcommands, Subcommand{
+		Name: name,
+		Help: help,
+		Run:  run,
+	})
 }
 
 func (self *Command) Find(name string) *Subcommand {
