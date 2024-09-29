@@ -81,7 +81,8 @@ func (self *Command) Usage() {
 - {{.App}} [command]
 
 commands: {{range .Subcommands}}
-- {{.Name}}: {{.Help}}{{end}}`
+- {{.Name}}: {{.Help}}{{end}}
+`
 
 	templ, _ = template.New("usage").Parse(text)
 	_ = templ.Execute(os.Stderr, self)
