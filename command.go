@@ -1,7 +1,6 @@
 package gotk
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"text/template"
@@ -21,22 +20,6 @@ func NewCommand(app string) (command *Command) {
 		Project:     viper.New(),
 		Subcommands: make([]Subcommand, 0),
 	}
-}
-
-func (self *Command) ProjectFromBts(bts []byte) (err error) {
-	var meta map[string]any
-
-	// _Project.ReadConfig(strings.NewReader(str))
-	if err = self.Project.ReadConfig(bytes.NewReader(bts)); err != nil {
-		return err
-	}
-
-	meta = BuildInfo()
-	meta["app_name"] = self.Project.GetString("app_name")
-	meta["app_version"] = self.Project.GetString("app_version")
-	self.Project.Set("meta", meta)
-
-	return nil
 }
 
 type Subcommand struct {
@@ -104,5 +87,7 @@ commands: {{range .Subcommands}}
 	templ, _ = template.New("usage").Parse(text)
 	_ = templ.Execute(os.Stderr, self)
 
-	fmt.Printf("\nmeta:\n%s\n", BuildInfoText(self.Project.GetStringMap("meta")))
+	if meta := self.Project.GetStringMap("meta"); len(meta) > 0 {
+		fmt.Printf("\nmeta:\n%s\n", BuildInfoText(meta))
+	}
 }

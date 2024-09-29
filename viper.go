@@ -7,6 +7,25 @@ import (
 	"github.com/spf13/viper"
 )
 
+func ProjectFromBytes(bts []byte) (project *viper.Viper, err error) {
+	var meta map[string]any
+
+	project = viper.New()
+	project.SetConfigType("yaml")
+	project.SetConfigName("project")
+
+	if err = project.ReadConfig(bytes.NewReader(bts)); err != nil {
+		return nil, err
+	}
+
+	meta = BuildInfo()
+	meta["app_name"] = project.GetString("app_name")
+	meta["app_version"] = project.GetString("app_version")
+	project.Set("meta", meta)
+
+	return project, nil
+}
+
 func LoadYamlConfig(fp, name string) (vp *viper.Viper, err error) {
 	vp = viper.New()
 	vp.SetConfigType("yaml")
