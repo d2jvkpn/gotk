@@ -96,7 +96,7 @@ commands: {{range .Subcommands}}
 func (self *Command) Usage() {
 	var builder strings.Builder
 
-	builder.WriteString(fmt.Sprintf("usage:\n  %s [command]\n\n", self.App))
+	builder.WriteString(fmt.Sprintf("usage:\n  %s: [command]\n\n", self.App))
 
 	builder.WriteString("commands:\n")
 	for _, v := range self.Subcommands {
