@@ -118,3 +118,11 @@ func (self *Command) Usage() {
 
 	fmt.Println(builder.String())
 }
+
+func (self *Command) UpdateMeta(mp map[string]any) {
+	meta := self.Project.GetStringMap("meta")
+
+	for k, v := range mp {
+		meta[k] = v
+	}
+}
