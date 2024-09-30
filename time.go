@@ -13,9 +13,12 @@ var (
 	_DatetimeRE = regexp.MustCompile(`^\d+-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$`)
 )
 
-func NowMs() string {
-	return time.Now().Format("2006-01-02T15:04:05.000Z07:00")
-}
+const (
+	MonthOnly    = "2006-01"
+	YearOnly     = "2006"
+	TimeZoneOnly = "-07:00"
+	RFC3339Milli = "2006-01-02T15:04:05.000-07:00"
+)
 
 // datetime format: "2021-06-24", "09:00:01", "2021-06-24 09:10:11" or "2021-06-24T09:10:11"
 func ParseDatetime(value string) (at time.Time, err error) {

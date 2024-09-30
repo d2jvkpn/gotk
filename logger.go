@@ -38,7 +38,7 @@ func NewDefaultLogger(writer io.Writer, withTs bool) (logger *DefaultLogger) {
 
 func (logger *DefaultLogger) Printf(format string, a ...any) (n int, err error) {
 	if logger.withTs {
-		t := time.Now().Format(RFC3339ms)
+		t := time.Now().Format(RFC3339Milli)
 		// bytes.TrimSpace(bts)
 		n, err = fmt.Fprintf(logger.w, t+" "+strings.TrimSpace(format)+"\n", a...)
 	} else {

@@ -12,10 +12,6 @@ import (
 	"time"
 )
 
-const (
-	RFC3339ms = "2006-01-02T15:04:05.000Z07:00"
-)
-
 // a simple log writer
 type LogWriter struct {
 	fp    string
@@ -28,7 +24,7 @@ type LogWriter struct {
 type LogPrinter struct{}
 
 func (w *LogPrinter) Write(bts []byte) (int, error) {
-	return fmt.Printf("%s %s\n", time.Now().Format(RFC3339ms), bytes.TrimSpace(bts))
+	return fmt.Printf("%s %s\n", time.Now().Format(RFC3339Milli), bytes.TrimSpace(bts))
 }
 
 func RegisterLogPrinter() {
@@ -64,7 +60,7 @@ func (lw *LogWriter) Write(bts []byte) (int, error) {
 	defer lw.mutex.Unlock()
 
 	// ?? check buffer size
-	lw.buf.WriteString(time.Now().Format(RFC3339ms))
+	lw.buf.WriteString(time.Now().Format(RFC3339Milli))
 	lw.buf.WriteByte(' ')
 	lw.buf.Write(bytes.TrimSpace(bts))
 	lw.buf.WriteByte('\n')

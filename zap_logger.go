@@ -87,7 +87,7 @@ func (logger *ZapLogger) Down() (err error) {
 	var e error
 
 	if logger == nil || logger.Writer == nil {
-		return
+		return nil
 	}
 
 	if e = logger.Sync(); e != nil {
