@@ -84,22 +84,19 @@ func NewZapLogger(filename string, level zapcore.LevelEnabler, size_mb int, skip
 }
 
 func (logger *ZapLogger) Down() (err error) {
-	var errs []error
+	var e error
 
-	if logger == nil {
+	if logger == nil || logger.Writer == nil {
 		return
 	}
 
-	errs = make([]error, 0, 2)
-	if err = logger.Sync(); err != nil {
-		errs = append(errs, fmt.Errorf("sync: %w", err))
+	if e = logger.Sync(); e != nil {
+		err = errors.Join(err, fmt.Errorf("sync: %w", e))
 	}
 
-	if logger.Writer != nil {
-		if err = logger.Writer.Close(); err != nil {
-			errs = append(errs, fmt.Errorf("close: %w", err))
-		}
+	if e = logger.Writer.Close(); e != nil {
+		err = errors.Join(err, fmt.Errorf("close: %w", e))
 	}
 
-	return errors.Join(errs...)
+	return err
 }
