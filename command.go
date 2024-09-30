@@ -15,12 +15,19 @@ type Command struct {
 	Subcommands []Subcommand `json:"subcommands"`
 }
 
-func NewCommand(app string) (command *Command) {
-	return &Command{
+func NewCommand(app string, projects ...*viper.Viper) (command *Command) {
+	command = &Command{
 		App:         app,
-		Project:     viper.New(),
 		Subcommands: make([]Subcommand, 0),
 	}
+
+	if len(projects) == 0 {
+		command.Project = viper.New()
+	} else {
+		command.Project = projects[0]
+	}
+
+	return command
 }
 
 type Subcommand struct {
@@ -72,7 +79,7 @@ func (self *Command) Find(name string) *Subcommand {
 	return nil
 }
 
-func (self *Command) Usage0() {
+func (self *Command) UsageTemplate() {
 	var (
 		text  string
 		templ *template.Template
