@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -45,14 +46,12 @@ func OtelMetrics2Prom(appName string, vp *viper.Viper) (otelmetric.Meter, error)
 // https://opentelemetry.io/docs/languages/go/getting-started/
 // get otelmetric.Meter by otel.GetMeterProvider()
 func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
-	func(context.Context) error, error) {
+	shutdown func(context.Context) error, err error) {
 	var (
-		err      error
 		ctx      context.Context
 		exporter *otlpmetricgrpc.Exporter
 		reso     *resource.Resource
 		provider *sdkmetric.MeterProvider
-		shutdown func(context.Context) error
 	)
 
 	ctx = context.Background()
@@ -63,7 +62,7 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 		resource.WithAttributes(semconv.ServiceNameKey.String(appName)),
 	)
 	if err != nil {
-		return shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err) // nil, shutdown, err
+		return shutdown, fmt.Errorf("resource.New: %w", err) // nil, shutdown, err
 	}
 
 	opts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(vp.GetString("address"))}
@@ -72,7 +71,7 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 	}
 
 	if exporter, err = otlpmetricgrpc.New(ctx, opts...); err != nil {
-		return shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err) // nil, shutdown, err
+		return shutdown, fmt.Errorf("otlpmetricgrpc.New: %w", err) // nil, shutdown, err
 	}
 
 	provider = sdkmetric.NewMeterProvider(
@@ -81,6 +80,8 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 		)),
 		sdkmetric.WithResource(reso),
 	)
+
+	// set global
 	otel.SetMeterProvider(provider)
 
 	if withRuntime {
@@ -89,9 +90,23 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 			runtime.WithMinimumReadMemStatsInterval(15*time.Second),
 		)
 		if err != nil {
-			return shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err)
+			return shutdown, fmt.Errorf("runtime.Start: %w", err)
 		}
 	}
 
-	return exporter.Shutdown, nil
+	shutdown = func(ctx context.Context) error {
+		var e1, e2 error
+
+		if e1 = provider.Shutdown(ctx); e1 != nil {
+			otel.Handle(e1)
+		}
+
+		if e2 = exporter.Shutdown(ctx); e2 != nil {
+			otel.Handle(e2)
+		}
+
+		return errors.Join(e1, e2)
+	}
+
+	return shutdown, nil
 }

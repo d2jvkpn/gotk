@@ -45,7 +45,7 @@ func OtelTracingGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValu
 	}
 
 	if conn, err = grpc.DialContext(ctx, address, opts...); err != nil {
-		return shutdown, fmt.Errorf("OtelTracingGrpc: %w", err)
+		return shutdown, fmt.Errorf("grpc.DialContext: %w", err)
 	}
 
 	client = otlptracegrpc.NewClient(
@@ -53,7 +53,7 @@ func OtelTracingGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValu
 	)
 
 	if exporter, err = otlptrace.New(ctx, client); err != nil {
-		return shutdown, fmt.Errorf("OtelTracingGrpc: %w", err)
+		return shutdown, fmt.Errorf("otlptrace.New: %w", err)
 	}
 
 	/*
@@ -86,7 +86,7 @@ func OtelTracingGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValu
 		resource.WithAttributes(attrs...),
 	)
 	if err != nil {
-		return shutdown, fmt.Errorf("OtelTracingGrpc: %w", err)
+		return shutdown, fmt.Errorf("resource.New: %w", err)
 	}
 
 	bsp := trace.NewBatchSpanProcessor(exporter)
