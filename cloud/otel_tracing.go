@@ -21,6 +21,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// get trace.TracerProvider by otel.GetTracerProvider()
 func OtelTracingGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValue) (
 	shutdown func(context.Context) error, err error) {
 	var (

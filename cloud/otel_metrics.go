@@ -43,8 +43,9 @@ func OtelMetrics2Prom(appName string, vp *viper.Viper) (otelmetric.Meter, error)
 }
 
 // https://opentelemetry.io/docs/languages/go/getting-started/
+// get otelmetric.Meter by otel.GetMeterProvider()
 func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
-	otelmetric.Meter, func(context.Context) error, error) {
+	func(context.Context) error, error) {
 	var (
 		err      error
 		ctx      context.Context
@@ -62,7 +63,7 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 		resource.WithAttributes(semconv.ServiceNameKey.String(appName)),
 	)
 	if err != nil {
-		return nil, shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err) // nil, shutdown, err
+		return shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err) // nil, shutdown, err
 	}
 
 	opts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithEndpoint(vp.GetString("address"))}
@@ -71,7 +72,7 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 	}
 
 	if exporter, err = otlpmetricgrpc.New(ctx, opts...); err != nil {
-		return nil, shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err) // nil, shutdown, err
+		return shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err) // nil, shutdown, err
 	}
 
 	provider = sdkmetric.NewMeterProvider(
@@ -88,9 +89,9 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 			runtime.WithMinimumReadMemStatsInterval(15*time.Second),
 		)
 		if err != nil {
-			return nil, shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err)
+			return shutdown, fmt.Errorf("OtelMetricsGrpc: %w", err)
 		}
 	}
 
-	return provider.Meter(appName), exporter.Shutdown, nil
+	return exporter.Shutdown, nil
 }
