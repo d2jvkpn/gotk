@@ -164,7 +164,7 @@ func (self *ErrX) Debug() (bts json.RawMessage) {
 	}
 
 	for _, e := range self.Errors {
-		data.Errors = append(data.Errors, fmt.Sprintf("%v", e))
+		data.Errors = append(data.Errors, fmt.Sprintf("%+v", e))
 	}
 
 	bts, _ = json.Marshal(data)
