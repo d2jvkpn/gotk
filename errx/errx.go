@@ -30,7 +30,7 @@ func ErrXFrom(e error) (errx *ErrX) {
 		return errx
 	}
 
-	errx = &ErrX{Item: &ErrRaw{Errors: []error{e}}}
+	errx = &ErrX{Item: NewErrRaw(e)}
 
 	return errx
 }
@@ -76,6 +76,16 @@ type ErrRaw struct {
 	Errors []error `json:"errors"`
 }
 
+func NewErrRaw(e error) (er *ErrRaw) {
+	er = &ErrRaw{Errors: make([]error, 0, 1)}
+
+	if e != nil {
+		er.Errors = append(er.Errors, e)
+	}
+
+	return er
+}
+
 func (self *ErrRaw) Error() string {
 	if len(self.Errors) == 0 {
 		return "<nil>"
@@ -84,13 +94,21 @@ func (self *ErrRaw) Error() string {
 	return errors.Join(self.Errors...).Error()
 }
 
+func (self *ErrRaw) AddErr(e error) *ErrRaw {
+	if e != nil {
+		self.Errors = append(self.Errors, e)
+	}
+
+	return self
+}
+
 func (self *ErrX) WithRaw(e error) *ErrX {
 	var er *ErrRaw
 
 	if errors.As(self.Item, &er) {
-		er.Errors = append(er.Errors, e)
+		er.AddErr(e)
 	} else {
-		self.Item = errors.Join(self.Item, &ErrRaw{Errors: []error{e}})
+		self.Item = errors.Join(self.Item, NewErrRaw(e))
 	}
 
 	return self

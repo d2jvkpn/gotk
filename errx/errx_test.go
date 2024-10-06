@@ -80,7 +80,7 @@ func TestErrx(t *testing.T) {
 
 	err = BizError(errors.New("account not found"))
 	errx = ErrXFrom(err)
-	errx.WithRaw(errors.New("sorry"))
+	errx.WithRaw(errors.New("sorry")).WithRaw(nil)
 	bts, _ = errx.MarshalJSON()
 	fmt.Printf("==> d4. json=%s\n", bts)
 }
