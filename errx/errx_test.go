@@ -78,11 +78,14 @@ func TestErrx(t *testing.T) {
 	bts, _ = errx.MarshalJSON()
 	fmt.Printf("==> d3. json=%s\n", bts)
 
-	err = BizError(errors.New("account not found"))
+	err = testBizError(errors.New("account not found")).WithMsg("account not exists")
 	errx = ErrXFrom(err)
 	errx.WithRaw(errors.New("sorry")).WithRaw(nil)
 	bts, _ = errx.MarshalJSON()
 	fmt.Printf("==> d4. json=%s\n", bts)
+
+	fmt.Printf("==> d5. respone=%s\n", errx.Response())
+	fmt.Printf("==> d5. debug=%s\n", errx.Debug())
 }
 
 func Fn01ErrX() (errx *ErrX) {
@@ -93,6 +96,6 @@ func Fn02ErrX() (err error) {
 	return Fn01ErrX()
 }
 
-func BizError(e error) (err error) {
+func testBizError(e error) (errx *ErrX) {
 	return NewErrX(e).Trace(2).WithCode("Biz").WithKind("NotFound")
 }

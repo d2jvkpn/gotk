@@ -22,7 +22,7 @@ func NewErrX(e error) (errx *ErrX) {
 	return &ErrX{Item: &ErrRaw{Errors: []error{e}}}
 }
 
-// checks if e is ErrX
+// checks if e is an ErrX
 func ErrXFrom(e error) (errx *ErrX) {
 	var ok bool
 
@@ -248,4 +248,40 @@ func (self *ErrX) MarshalJSON() (bts []byte, e error) {
 	}
 
 	return json.Marshal(data)
+}
+
+func (self *ErrX) Response() (bts json.RawMessage) {
+	data := struct {
+		Code string `json:"code,omitempty"`
+		Kind string `json:"kind,omitempty"`
+		Msg  string `json:"msg,omitempty"`
+	}{
+		Code: self.GetCode(),
+		Kind: self.GetKind(),
+		Msg:  self.GetMsg(),
+	}
+
+	bts, _ = json.Marshal(data)
+	return bts
+}
+
+func (self *ErrX) Debug() (bts json.RawMessage) {
+	data := struct {
+		Errors []string `json:"errors"`
+
+		Line int    `json:"line,omitempty"`
+		Fn   string `json:"fn,omitempty"`
+		File string `json:"file,omitempty"`
+	}{
+		Line: self.Line,
+		Fn:   self.Fn,
+		File: self.File,
+	}
+
+	for _, e := range self.GetRawErrors() {
+		data.Errors = append(data.Errors, fmt.Sprintf("%v", e))
+	}
+
+	bts, _ = json.Marshal(data)
+	return bts
 }
