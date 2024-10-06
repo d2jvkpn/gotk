@@ -28,24 +28,28 @@ func TestErrx(t *testing.T) {
 	errx = NewErrX(errors.New("wrong"))
 	errx.WithCode("code42").WithKind("kind42").WithKind("kind_xx")
 
-	fmt.Printf("==> c2. ErrX=%+#v\n", errx)
+	fmt.Printf("==> b1. ErrX=%+#v\n", errx)
 
-	fmt.Printf("==> c3. errors=%v\n", errx.Errors)
+	fmt.Printf("==> b2. errors=%v\n", errx.Errors)
 
 	// 3.
 	errx = Fn01ErrX()
-	fmt.Printf("==> d1. errx is nil: %t\n", errx == nil)
+	fmt.Printf("==> c1. errx is nil: %t\n", errx == nil)
 
 	var e error = Fn02ErrX()
 	errx, _ = e.(*ErrX)
-	fmt.Printf("==> d2. %t, %t\n", e == nil, errx.IsNil())
+	fmt.Printf("==> c2. %t, %t\n", e == nil, errx.IsNil())
 	// false, true, true
+
+	errx = NewErrX(nil)
+	e = errx
+	fmt.Printf("==> c3. is_nil=%t, e=%v\n", errx.IsNil(), e)
 
 	// 4.
 	var bts []byte
 
 	errx = NewErrX(errors.New("e1"))
-	errx.AddErr(errors.New("e2")).WithKind("kind01").Trace()
+	errx.WithErr(errors.New("e2")).WithKind("kind01").Trace()
 
 	fmt.Printf("==> d3. errx=%v\n", errx)
 
@@ -54,7 +58,7 @@ func TestErrx(t *testing.T) {
 
 	err = testBizError(errors.New("account not found")).WithMsg("account not exists")
 	errx = ErrXFrom(err)
-	errx.AddErr(errors.New("sorry")).AddErr(nil)
+	errx.WithErr(errors.New("sorry")).WithErr(nil)
 	bts, _ = json.Marshal(errx)
 	fmt.Printf("==> d4. json=%s\n", bts)
 

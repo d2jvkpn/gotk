@@ -70,10 +70,15 @@ func (self *ErrX) IsNil() bool {
 }
 
 func (self *ErrX) Error() string {
+
+	if len(self.Errors) == 0 {
+		return "<nil>"
+	}
+
 	return errors.Join(self.Errors...).Error()
 }
 
-func (self *ErrX) AddErr(e error) *ErrX {
+func (self *ErrX) WithErr(e error) *ErrX {
 	if e != nil {
 		self.Errors = append(self.Errors, e)
 	}
