@@ -6,7 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func PromMetricsAPI2(attrs []string) (fn func(string, float64, []string), err error) {
+func PromMetricsHttp(attrs []string) (fn func(string, float64, []string), err error) {
 	var (
 		codeCounter    *prometheus.CounterVec
 		requestLatency *prometheus.HistogramVec

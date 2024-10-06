@@ -8,7 +8,6 @@ go 1.23
 
 require (
 	github.com/d2jvkpn/gotk v0.0.0-20240918152032-6f554a7dc276
-	github.com/d2jvkpn/gotk/trace_error v0.0.0-20240918152032-6f554a7dc276
 	github.com/prometheus/client_golang v1.20.4
 	github.com/spf13/viper v1.19.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.55.0

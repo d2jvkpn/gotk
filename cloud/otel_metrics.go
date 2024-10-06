@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	otelprometheus "go.opentelemetry.io/otel/exporters/prometheus"
 	otelmetric "go.opentelemetry.io/otel/metric"
@@ -109,4 +110,52 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 	}
 
 	return shutdown, nil
+}
+
+func OtelMetricsHttp(meter otelmetric.Meter, attrs []string) (
+	fn func(string, float64, []string), err error) {
+	var (
+		codeCounter    otelmetric.Float64Counter
+		requestLatency otelmetric.Float64Histogram
+	)
+
+	// http_code, http response code summary
+	codeCounter, err = meter.Float64Counter(
+		"http_code", // suffix _total added
+		otelmetric.WithDescription("HTTP response codes counter"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	requestLatency, err = meter.Float64Histogram(
+		"http_latency",
+		otelmetric.WithDescription("HTTP response latency milliseconds"),
+		otelmetric.WithExplicitBucketBoundaries(10.0, 100.0, 200.0, 500.0, 1000.0, 5000.0),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(api string, latency float64, values []string) {
+		var attributes []attribute.KeyValue
+
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
+		attributes = make([]attribute.KeyValue, 0, 1+len(attrs))
+
+		attributes = append(attributes, attribute.Key("api").String(api))
+
+		for i := 0; i < min(len(attrs), len(values)); i++ {
+			attributes = append(attributes, attribute.Key(attrs[i]).String(values[i]))
+		}
+
+		codeCounter.Add(ctx, 1, otelmetric.WithAttributes(attributes...))
+
+		requestLatency.Record(ctx, latency, otelmetric.WithAttributes(
+			attribute.Key("api").String(api),
+		))
+		// concurrentRequests.Dec()
+	}, nil
 }
