@@ -107,9 +107,9 @@ func (self *ErrX) MarshalJSON() ([]byte, error) {
 	data := struct {
 		Errors []string `json:"errors"`
 
-		Code string `json:"code,omitempty"`
-		Kind string `json:"kind,omitempty"`
-		Msg  string `json:"msg,omitempty"`
+		Code string `json:"code"`
+		Kind string `json:"kind"`
+		Msg  string `json:"msg"`
 
 		Line int    `json:"line,omitempty"`
 		Fn   string `json:"fn,omitempty"`
@@ -135,9 +135,9 @@ func (self *ErrX) MarshalJSON() ([]byte, error) {
 
 func (self *ErrX) Response() (bts json.RawMessage) {
 	data := struct {
-		Code string `json:"code,omitempty"`
-		Kind string `json:"kind,omitempty"`
-		Msg  string `json:"msg,omitempty"`
+		Code string `json:"code"`
+		Kind string `json:"kind"`
+		Msg  string `json:"msg"`
 	}{
 		Code: self.Code,
 		Kind: self.Kind,
