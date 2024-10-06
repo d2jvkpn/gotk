@@ -132,6 +132,10 @@ func (self *ErrX) MarshalJSON() ([]byte, error) {
 	return json.Marshal(data)
 }
 
+func (self *ErrX) CodeKind() (string, string) {
+	return self.Code, self.Kind
+}
+
 func (self *ErrX) Response() (bts json.RawMessage) {
 	data := struct {
 		Code string `json:"code"`
