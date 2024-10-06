@@ -9,42 +9,7 @@ import (
 	"runtime"
 )
 
-type ErrRaw struct {
-	Errors []error `json:"errors"`
-}
-
-func (self *ErrRaw) Error() string {
-	if len(self.Errors) == 0 {
-		return "<nil>"
-	}
-
-	return errors.Join(self.Errors...).Error()
-}
-
-type ErrCode struct {
-	Code string `json:"code"`
-}
-
-func (self *ErrCode) Error() string {
-	return self.Code
-}
-
-type ErrKind struct {
-	Kind string `json:"kind"`
-}
-
-func (self *ErrKind) Error() string {
-	return self.Kind
-}
-
-type ErrMsg struct {
-	Msg string `json:"msg"`
-}
-
-func (self *ErrMsg) Error() string {
-	return self.Msg
-}
-
+// #### 1. ErrX
 type ErrX struct {
 	Item error `json:"-"`
 
@@ -106,16 +71,52 @@ func (self *ErrX) Error() string {
 	return self.Item.Error()
 }
 
-func (self *ErrX) WithMsg(str string) *ErrX {
-	var em *ErrMsg
+// #### 2. ErrRaw
+type ErrRaw struct {
+	Errors []error `json:"errors"`
+}
 
-	if errors.As(self.Item, &em) {
-		em.Msg = str
+func (self *ErrRaw) Error() string {
+	if len(self.Errors) == 0 {
+		return "<nil>"
+	}
+
+	return errors.Join(self.Errors...).Error()
+}
+
+func (self *ErrX) WithRaw(e error) *ErrX {
+	var er *ErrRaw
+
+	if errors.As(self.Item, &er) {
+		er.Errors = append(er.Errors, e)
 	} else {
-		self.Item = errors.Join(self.Item, &ErrMsg{Msg: str})
+		self.Item = errors.Join(self.Item, &ErrRaw{Errors: []error{e}})
 	}
 
 	return self
+}
+
+func (self *ErrX) GetRawErrors() []error {
+	var er *ErrRaw
+
+	if self == nil || self.Item == nil {
+		return nil
+	}
+
+	if errors.As(self.Item, &er) {
+		return er.Errors
+	} else {
+		return nil
+	}
+}
+
+// #### 3. ErrCode
+type ErrCode struct {
+	Code string `json:"code"`
+}
+
+func (self *ErrCode) Error() string {
+	return self.Code
 }
 
 func (self *ErrX) WithCode(str string) *ErrX {
@@ -140,6 +141,15 @@ func (self *ErrX) GetCode() string {
 	}
 }
 
+// #### 4. ErrKind
+type ErrKind struct {
+	Kind string `json:"kind"`
+}
+
+func (self *ErrKind) Error() string {
+	return self.Kind
+}
+
 func (self *ErrX) WithKind(str string) *ErrX {
 	var ek *ErrKind
 
@@ -147,18 +157,6 @@ func (self *ErrX) WithKind(str string) *ErrX {
 		ek.Kind = str
 	} else {
 		self.Item = errors.Join(self.Item, &ErrKind{Kind: str})
-	}
-
-	return self
-}
-
-func (self *ErrX) WithRaw(e error) *ErrX {
-	var er *ErrRaw
-
-	if errors.As(self.Item, &er) {
-		er.Errors = append(er.Errors, e)
-	} else {
-		self.Item = errors.Join(self.Item, &ErrRaw{Errors: []error{e}})
 	}
 
 	return self
@@ -174,6 +172,27 @@ func (self *ErrX) GetKind() string {
 	}
 }
 
+// #### 5. ErrMsg
+type ErrMsg struct {
+	Msg string `json:"msg"`
+}
+
+func (self *ErrMsg) Error() string {
+	return self.Msg
+}
+
+func (self *ErrX) WithMsg(str string) *ErrX {
+	var em *ErrMsg
+
+	if errors.As(self.Item, &em) {
+		em.Msg = str
+	} else {
+		self.Item = errors.Join(self.Item, &ErrMsg{Msg: str})
+	}
+
+	return self
+}
+
 func (self *ErrX) GetMsg() string {
 	var em *ErrMsg
 
@@ -184,20 +203,7 @@ func (self *ErrX) GetMsg() string {
 	}
 }
 
-func (self *ErrX) GetRawErrors() []error {
-	var er *ErrRaw
-
-	if self == nil || self.Item == nil {
-		return nil
-	}
-
-	if errors.As(self.Item, &er) {
-		return er.Errors
-	} else {
-		return nil
-	}
-}
-
+// #### 5. JSON
 func (self *ErrX) MarshalJSON() (bts []byte, e error) {
 	data := struct {
 		Errors []string `json:"errors"`
