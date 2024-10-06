@@ -9,7 +9,6 @@ import (
 	"runtime"
 )
 
-// #### 1. ErrX
 type ErrX struct {
 	Errors []error `json:"errors"`
 
@@ -71,7 +70,7 @@ func (self *ErrX) IsNil() bool {
 
 func (self *ErrX) Error() string {
 
-	if len(self.Errors) == 0 {
+	if self.IsNil() {
 		return "<nil>"
 	}
 
