@@ -22,7 +22,7 @@ func (self *ErrRaw) Error() string {
 }
 
 type ErrCode struct {
-	Code string
+	Code string `json:"code"`
 }
 
 func (self *ErrCode) Error() string {
@@ -30,7 +30,7 @@ func (self *ErrCode) Error() string {
 }
 
 type ErrKind struct {
-	Kind string
+	Kind string `json:"kind"`
 }
 
 func (self *ErrKind) Error() string {
@@ -38,7 +38,7 @@ func (self *ErrKind) Error() string {
 }
 
 type ErrMsg struct {
-	Msg string
+	Msg string `json:"msg"`
 }
 
 func (self *ErrMsg) Error() string {
