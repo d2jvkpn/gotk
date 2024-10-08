@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 
 	"path/filepath"
 	"runtime"
@@ -11,14 +12,13 @@ import (
 
 type ErrX struct {
 	Errors []error `json:"errors"`
+	Line   int     `json:"line"`
+	Fn     string  `json:"fn"`
+	File   string  `json:"file"`
 
-	Code string `json:"code,omitempty"`
-	Kind string `json:"kind,omitempty"`
-	Msg  string `json:"msg,omitempty"`
-
-	Line int    `json:"line,omitempty"`
-	Fn   string `json:"fn,omitempty"`
-	File string `json:"file,omitempty"`
+	Code string `json:"code"`
+	Kind string `json:"kind"`
+	Msg  string `json:"msg"`
 }
 
 func NewErrX(e error) (errx *ErrX) {
@@ -31,7 +31,7 @@ func NewErrX(e error) (errx *ErrX) {
 	return errx
 }
 
-// checks if e is an ErrX
+// checks if the input is an ErrX
 func ErrXFrom(e error) (errx *ErrX) {
 	var ok bool
 
@@ -77,9 +77,11 @@ func (self *ErrX) Error() string {
 	return errors.Join(self.Errors...).Error()
 }
 
-func (self *ErrX) WithErr(e error) *ErrX {
-	if e != nil {
-		self.Errors = append(self.Errors, e)
+func (self *ErrX) WithErr(errs ...error) *ErrX {
+	for i := range errs {
+		if errs[i] != nil {
+			self.Errors = append(self.Errors, errs[i])
+		}
 	}
 
 	return self
@@ -105,24 +107,22 @@ func (self *ErrX) WithMsg(str string) *ErrX {
 func (self *ErrX) MarshalJSON() ([]byte, error) {
 	data := struct {
 		Errors []string `json:"errors"`
+		Line   int      `json:"line,omitempty"`
+		Fn     string   `json:"fn,omitempty"`
+		File   string   `json:"file,omitempty"`
 
 		Code string `json:"code"`
 		Kind string `json:"kind"`
 		Msg  string `json:"msg"`
-
-		Line int    `json:"line,omitempty"`
-		Fn   string `json:"fn,omitempty"`
-		File string `json:"file,omitempty"`
 	}{
 		Errors: make([]string, 0, len(self.Errors)),
+		Line:   self.Line,
+		Fn:     self.Fn,
+		File:   self.File,
 
 		Code: self.Code,
 		Kind: self.Kind,
 		Msg:  self.Msg,
-
-		Line: self.Line,
-		Fn:   self.Fn,
-		File: self.File,
 	}
 
 	for _, e := range self.Errors {
@@ -154,16 +154,14 @@ func (self *ErrX) Response() (bts json.RawMessage) {
 func (self *ErrX) Debug() (bts json.RawMessage) {
 	data := struct {
 		Errors []string `json:"errors"`
-
-		Line int    `json:"line,omitempty"`
-		Fn   string `json:"fn,omitempty"`
-		File string `json:"file,omitempty"`
+		Line   int      `json:"line"`
+		Fn     string   `json:"fn"`
+		File   string   `json:"file"`
 	}{
 		Errors: make([]string, 0, len(self.Errors)),
-
-		Line: self.Line,
-		Fn:   self.Fn,
-		File: self.File,
+		Line:   self.Line,
+		Fn:     self.Fn,
+		File:   self.File,
 	}
 
 	for _, e := range self.Errors {
@@ -172,4 +170,49 @@ func (self *ErrX) Debug() (bts json.RawMessage) {
 
 	bts, _ = json.Marshal(data)
 	return bts
+}
+
+func ParallelRun(funcs ...func() error) (errx *ErrX) {
+	var (
+		hasErr, ok bool
+		wg         sync.WaitGroup
+		errs       []error
+	)
+
+	errs = make([]error, len(funcs))
+	wg.Add(len(funcs))
+
+	for i := range funcs {
+		go func(i int) {
+			errs[i] = funcs[i]()
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+
+	hasErr = false
+	for i := range errs {
+		if errs[i] == nil {
+			continue
+		}
+		hasErr = true
+
+		if errx != nil {
+			if errx, ok = errs[i].(*ErrX); ok {
+				errs[i] = nil
+			}
+		}
+	}
+
+	if !hasErr {
+		return nil
+	}
+
+	if errx == nil {
+		errx = NewErrX(errors.Join(errs...))
+	} else {
+		errx.WithErr(errs...)
+	}
+
+	return errx
 }

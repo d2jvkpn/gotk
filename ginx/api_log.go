@@ -22,8 +22,8 @@ type Logger[T any] interface {
 	Error(string, ...T)
 }
 
-func NewAPILog(logger Logger[zap.Field], debug bool, server string,
-	errHandlers ...func(string, float64, *trace_error.Error)) (hf gin.HandlerFunc) {
+func NewAPILog(logger Logger[zap.Field], debug bool,
+	metrics ...func(string, float64, codes []string)) (hf gin.HandlerFunc) {
 	gomod, _ := gotk.RootModule()
 	// debug := logger.Level() == zapcore.DebugLevel
 
@@ -52,7 +52,7 @@ func NewAPILog(logger Logger[zap.Field], debug bool, server string,
 		requestId = uuid.New().String()
 		// ctx.Set("RequestId", requestId) // CONTEXT_RequestId
 		ctx.Header("x-request-id", requestId)
-		ctx.Header("x-server", server) // HEADER_Server
+		// ctx.Header("x-server", server) // HEADER_Server
 
 		// HEADER_Client
 		// client := ctx.GetHeader("x-client")
@@ -71,7 +71,7 @@ func NewAPILog(logger Logger[zap.Field], debug bool, server string,
 			appendString("accountId", accountId)
 
 			latency := float64(time.Since(start).Microseconds()) / 1e3
-			fields = append(fields, zap.Float64("latencyMs", latency))
+			fields = append(fields, zap.Float64("latencyMilli", latency))
 
 			status := ctx.Writer.Status()
 			fields = append(fields, zap.Int("status", status))
