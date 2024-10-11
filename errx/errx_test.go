@@ -62,7 +62,6 @@ func TestErrx01(t *testing.T) {
 	bts, _ = json.Marshal(err)
 	fmt.Printf("==> d4. json=%s\n", bts)
 
-	fmt.Printf("==> d5. respone=%s\n", err.Response())
 	fmt.Printf("==> d5. debug=%s\n", err.Debug())
 }
 

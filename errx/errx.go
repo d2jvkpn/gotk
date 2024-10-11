@@ -186,23 +186,8 @@ func (self *ErrX) MarshalJSON() ([]byte, error) {
 	return json.Marshal(data)
 }
 
-func (self *ErrX) CodeKind() (string, string) {
+func (self *ErrX) ErrKC() (string, string) {
 	return self.Code, self.Kind
-}
-
-func (self *ErrX) Response() (bts json.RawMessage) {
-	data := struct {
-		Kind string `json:"kind"`
-		Code string `json:"code"`
-		Msg  string `json:"msg"`
-	}{
-		Code: self.Code,
-		Kind: self.Kind,
-		Msg:  self.Msg,
-	}
-
-	bts, _ = json.Marshal(data)
-	return bts
 }
 
 func (self *ErrX) Debug() (bts json.RawMessage) {
