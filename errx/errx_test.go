@@ -9,72 +9,72 @@ import (
 
 func TestErrx01(t *testing.T) {
 	// 1.
-	var err error
+	var e error
 
-	err = fmt.Errorf("hello")
-	err = fmt.Errorf("an error: %w", err)
-	fmt.Printf("==> a1. %v\n", err)
-	fmt.Printf("==> a2. %v\n", errors.Unwrap(err))
+	e = fmt.Errorf("hello")
+	e = fmt.Errorf("an error: %w", e)
+	fmt.Printf("==> a1. %v\n", e)
+	fmt.Printf("==> a2. %v\n", errors.Unwrap(e))
 
 	e1, e2 := errors.New("hello"), errors.New("world")
-	err = errors.Join(e1, e2)
-	fmt.Printf("==> a3. %v\n", err)
-	fmt.Printf("==> a4. %v\n", errors.Unwrap(err))
+	e = errors.Join(e1, e2)
+	fmt.Printf("==> a3. %v\n", e)
+	fmt.Printf("==> a4. %v\n", errors.Unwrap(e))
 
 	// 2.
-	var errx *ErrX
+	var err *ErrX
 
 	// errx = new(ErrX)
-	errx = NewErrX(errors.New("wrong"))
-	errx.WithCode("code42").WithKind("kind42").WithKind("kind_xx")
+	err = NewErrX(errors.New("wrong"))
+	err.WithCode("code42").WithKind("kind42").WithKind("kind_xx")
 
-	fmt.Printf("==> b1. ErrX=%+#v\n", errx)
+	fmt.Printf("==> b1. ErrX=%+#v\n", err)
 
-	fmt.Printf("==> b2. errors=%v\n", errx.Errors)
+	fmt.Printf("==> b2. errors=%v\n", err.Errors)
 
 	// 3.
-	errx = fn01ErrX()
-	fmt.Printf("==> c1. errx is nil: %t\n", errx == nil)
+	err = fn01ErrX()
+	fmt.Printf("==> c1. err is nil: %t\n", err == nil)
 
-	var e error = fn02ErrX()
-	errx, _ = e.(*ErrX)
-	fmt.Printf("==> c2. %t, %t\n", e == nil, errx.IsNil())
+	e = fn02ErrX()
+	err, _ = e.(*ErrX)
+	fmt.Printf("==> c2. %t, %t\n", e == nil, err.IsNil())
 	// false, true, true
 
-	errx = NewErrX(nil)
-	e = errx
-	fmt.Printf("==> c3. is_nil=%t, e=%v\n", errx.IsNil(), e)
+	err = NewErrX(nil)
+	e = err
+	fmt.Printf("==> c3. is_nil=%t, e=%v\n", err.IsNil(), e)
 
 	// 4.
 	var bts []byte
 
-	errx = NewErrX(errors.New("e1"))
-	errx.WithErr(errors.New("e2")).WithKind("kind01").Trace()
+	err = NewErrX(errors.New("e1"))
+	err.WithErr(errors.New("e2")).WithKind("kind01").Trace()
 
-	fmt.Printf("==> d3. errx=%v\n", errx)
+	fmt.Printf("==> d3. ErrX=%v\n", err)
 
-	bts, _ = json.Marshal(errx)
+	bts, _ = json.Marshal(err)
 	fmt.Printf("==> d3. json=%s\n", bts)
 
-	err = testBizError(errors.New("account not found")).WithMsg("account not exists")
-	errx = ErrXFrom(err)
-	errx.WithErr(errors.New("sorry")).WithErr(nil)
-	bts, _ = json.Marshal(errx)
+	e = testBizError(errors.New("account not found")).WithMsg("account not exists")
+	err = ErrXFrom(e)
+	err.WithErr(errors.New("sorry")).WithErr(nil)
+	bts, _ = json.Marshal(err)
 	fmt.Printf("==> d4. json=%s\n", bts)
 
-	fmt.Printf("==> d5. respone=%s\n", errx.Response())
-	fmt.Printf("==> d5. debug=%s\n", errx.Debug())
+	fmt.Printf("==> d5. respone=%s\n", err.Response())
+	fmt.Printf("==> d5. debug=%s\n", err.Debug())
 }
 
-func fn01ErrX() (errx *ErrX) {
+func fn01ErrX() (err *ErrX) {
 	return nil
 }
 
-func fn02ErrX() (err error) {
+func fn02ErrX() (e error) {
 	return fn01ErrX()
 }
 
-func testBizError(e error) (errx *ErrX) {
+func testBizError(e error) (err *ErrX) {
 	return NewErrX(e).Trace(2).WithCode("Biz").WithKind("NotFound")
 }
 

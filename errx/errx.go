@@ -23,18 +23,18 @@ type ErrX struct {
 
 type Option func(*ErrX)
 
-func NewErrX(e error, options ...Option) (errx *ErrX) {
-	errx = &ErrX{Errors: make([]error, 0, 1)}
+func NewErrX(e error, options ...Option) (err *ErrX) {
+	err = &ErrX{Errors: make([]error, 0, 1)}
 
 	if e != nil {
-		errx.Errors = append(errx.Errors, e)
+		err.Errors = append(err.Errors, e)
 	}
 
 	for _, opt := range options {
-		opt(errx)
+		opt(err)
 	}
 
-	return errx
+	return err
 }
 
 func Trace(skips ...int) Option {
@@ -66,16 +66,16 @@ func Msg(str string) Option {
 }
 
 // checks if the input is an ErrX
-func ErrXFrom(e error) (errx *ErrX) {
+func ErrXFrom(e error) (err *ErrX) {
 	var ok bool
 
-	if errx, ok = e.(*ErrX); ok {
-		return errx
+	if err, ok = e.(*ErrX); ok {
+		return err
 	}
 
-	errx = NewErrX(e)
+	err = NewErrX(e)
 
-	return errx
+	return err
 }
 
 func (self *ErrX) Trace(skips ...int) *ErrX {
@@ -222,7 +222,7 @@ func (self *ErrX) Debug() (bts json.RawMessage) {
 	return bts
 }
 
-func ParallelRun(funcs ...func() error) (errx *ErrX) {
+func ParallelRun(funcs ...func() error) (err *ErrX) {
 	var (
 		hasError bool
 		ok       bool
@@ -248,8 +248,8 @@ func ParallelRun(funcs ...func() error) (errx *ErrX) {
 		}
 		hasError = true
 
-		if errx != nil {
-			if errx, ok = errs[i].(*ErrX); ok {
+		if err != nil {
+			if err, ok = errs[i].(*ErrX); ok {
 				errs[i] = nil
 			}
 		}
@@ -259,11 +259,11 @@ func ParallelRun(funcs ...func() error) (errx *ErrX) {
 		return nil
 	}
 
-	if errx == nil {
-		errx = NewErrX(errors.Join(errs...))
+	if err == nil {
+		err = NewErrX(errors.Join(errs...))
 	} else {
-		errx.WithErr(errs...)
+		err.WithErr(errs...)
 	}
 
-	return errx
+	return err
 }
