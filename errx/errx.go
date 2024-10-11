@@ -16,8 +16,8 @@ type ErrX struct {
 	Fn     string  `json:"fn"`
 	File   string  `json:"file"`
 
-	Code string `json:"code"`
 	Kind string `json:"kind"`
+	Code string `json:"code"`
 	Msg  string `json:"msg"`
 }
 
@@ -47,15 +47,15 @@ func Trace(skips ...int) Option {
 	}
 }
 
-func Code(str string) Option {
-	return func(self *ErrX) {
-		self.WithCode(str)
-	}
-}
-
 func Kind(str string) Option {
 	return func(self *ErrX) {
 		self.WithKind(str)
+	}
+}
+
+func Code(str string) Option {
+	return func(self *ErrX) {
+		self.WithCode(str)
 	}
 }
 
@@ -120,14 +120,14 @@ func (self *ErrX) WithErr(errs ...error) *ErrX {
 	return self
 }
 
-func (self *ErrX) WithCode(str string) *ErrX {
-	self.Code = str
+func (self *ErrX) WithKind(str string) *ErrX {
+	self.Kind = str
 
 	return self
 }
 
-func (self *ErrX) WithKind(str string) *ErrX {
-	self.Kind = str
+func (self *ErrX) WithCode(str string) *ErrX {
+	self.Code = str
 
 	return self
 }
@@ -169,8 +169,8 @@ func (self *ErrX) MarshalJSON() ([]byte, error) {
 		Fn     string            `json:"fn,omitempty"`
 		File   string            `json:"file,omitempty"`
 
-		Code string `json:"code"`
 		Kind string `json:"kind"`
+		Code string `json:"code"`
 		Msg  string `json:"msg"`
 	}{
 		Errors: self.ErrorsToJSON(),
@@ -192,8 +192,8 @@ func (self *ErrX) CodeKind() (string, string) {
 
 func (self *ErrX) Response() (bts json.RawMessage) {
 	data := struct {
-		Code string `json:"code"`
 		Kind string `json:"kind"`
+		Code string `json:"code"`
 		Msg  string `json:"msg"`
 	}{
 		Code: self.Code,
@@ -249,7 +249,7 @@ func ParallelRun(funcs ...func() error) (errx *ErrX) {
 		hasError = true
 
 		if errx != nil {
-			if errx, ok = errs[i].(*ErrX); ok && errx != nil {
+			if errx, ok = errs[i].(*ErrX); ok {
 				errs[i] = nil
 			}
 		}
