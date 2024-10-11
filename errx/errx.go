@@ -224,9 +224,10 @@ func (self *ErrX) Debug() (bts json.RawMessage) {
 
 func ParallelRun(funcs ...func() error) (errx *ErrX) {
 	var (
-		hasErr, ok bool
-		wg         sync.WaitGroup
-		errs       []error
+		hasError bool
+		ok       bool
+		errs     []error
+		wg       sync.WaitGroup
 	)
 
 	errs = make([]error, len(funcs))
@@ -240,21 +241,21 @@ func ParallelRun(funcs ...func() error) (errx *ErrX) {
 	}
 	wg.Wait()
 
-	hasErr = false
+	hasError = false
 	for i := range errs {
 		if errs[i] == nil {
 			continue
 		}
-		hasErr = true
+		hasError = true
 
 		if errx != nil {
-			if errx, ok = errs[i].(*ErrX); ok {
+			if errx, ok = errs[i].(*ErrX); ok && errx != nil {
 				errs[i] = nil
 			}
 		}
 	}
 
-	if !hasErr {
+	if !hasError {
 		return nil
 	}
 
