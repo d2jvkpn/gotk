@@ -21,14 +21,48 @@ type ErrX struct {
 	Msg  string `json:"msg"`
 }
 
-func NewErrX(e error) (errx *ErrX) {
+type Option func(*ErrX)
+
+func NewErrX(e error, options ...Option) (errx *ErrX) {
 	errx = &ErrX{Errors: make([]error, 0, 1)}
 
 	if e != nil {
 		errx.Errors = append(errx.Errors, e)
 	}
 
+	for _, opt := range options {
+		opt(errx)
+	}
+
 	return errx
+}
+
+func Trace(skips ...int) Option {
+	if len(skips) == 0 {
+		skips = []int{1}
+	}
+
+	return func(self *ErrX) {
+		self.Trace(skips...)
+	}
+}
+
+func Code(str string) Option {
+	return func(self *ErrX) {
+		self.WithCode(str)
+	}
+}
+
+func Kind(str string) Option {
+	return func(self *ErrX) {
+		self.WithKind(str)
+	}
+}
+
+func Msg(str string) Option {
+	return func(self *ErrX) {
+		self.WithMsg(str)
+	}
 }
 
 // checks if the input is an ErrX

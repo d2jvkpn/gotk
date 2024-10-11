@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestErrx(t *testing.T) {
+func TestErrx01(t *testing.T) {
 	// 1.
 	var err error
 
@@ -33,10 +33,10 @@ func TestErrx(t *testing.T) {
 	fmt.Printf("==> b2. errors=%v\n", errx.Errors)
 
 	// 3.
-	errx = Fn01ErrX()
+	errx = fn01ErrX()
 	fmt.Printf("==> c1. errx is nil: %t\n", errx == nil)
 
-	var e error = Fn02ErrX()
+	var e error = fn02ErrX()
 	errx, _ = e.(*ErrX)
 	fmt.Printf("==> c2. %t, %t\n", e == nil, errx.IsNil())
 	// false, true, true
@@ -66,14 +66,27 @@ func TestErrx(t *testing.T) {
 	fmt.Printf("==> d5. debug=%s\n", errx.Debug())
 }
 
-func Fn01ErrX() (errx *ErrX) {
+func fn01ErrX() (errx *ErrX) {
 	return nil
 }
 
-func Fn02ErrX() (err error) {
-	return Fn01ErrX()
+func fn02ErrX() (err error) {
+	return fn01ErrX()
 }
 
 func testBizError(e error) (errx *ErrX) {
 	return NewErrX(e).Trace(2).WithCode("Biz").WithKind("NotFound")
+}
+
+func TestErrx02(t *testing.T) {
+	var errx, e2 *ErrX
+
+	errx = NewErrX(errors.New("..."), Code("biz_error")).WithKind("NotFound").Trace()
+
+	fmt.Printf("==> 1. %+#v\n", errx)
+
+	e2 = NewErrX(errors.New("an error"), Code("internal_error")).WithKind("DBError").Trace()
+
+	errx.WithErr(e2)
+	fmt.Printf("==> 2. %+#v\n", errx)
 }
