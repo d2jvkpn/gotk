@@ -3,7 +3,7 @@ package errx
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	// "fmt"
 	"sync"
 
 	"path/filepath"
@@ -103,7 +103,6 @@ func (self *ErrX) IsNil() bool {
 }
 
 func (self *ErrX) Error() string {
-
 	if self.IsNil() {
 		return "<nil>"
 	}
@@ -138,18 +137,43 @@ func (self *ErrX) WithMsg(str string) *ErrX {
 	return self
 }
 
+func (self *ErrX) ErrorsToJSON() (msgs []json.RawMessage) {
+	var (
+		ok  bool
+		e   error
+		msg json.RawMessage
+	)
+
+	for _, e = range self.Errors {
+		if e == nil {
+			continue
+		}
+
+		// data.Errors = append(data.Errors, fmt.Sprintf("%v", e))
+		if _, ok = e.(*ErrX); ok {
+			msg, _ = json.Marshal(&e)
+		} else {
+			msg, _ = json.Marshal(e.Error())
+		}
+
+		msgs = append(msgs, msg)
+	}
+
+	return msgs
+}
+
 func (self *ErrX) MarshalJSON() ([]byte, error) {
 	data := struct {
-		Errors []string `json:"errors"`
-		Line   int      `json:"line,omitempty"`
-		Fn     string   `json:"fn,omitempty"`
-		File   string   `json:"file,omitempty"`
+		Errors []json.RawMessage `json:"errors"`
+		Line   int               `json:"line,omitempty"`
+		Fn     string            `json:"fn,omitempty"`
+		File   string            `json:"file,omitempty"`
 
 		Code string `json:"code"`
 		Kind string `json:"kind"`
 		Msg  string `json:"msg"`
 	}{
-		Errors: make([]string, 0, len(self.Errors)),
+		Errors: self.ErrorsToJSON(),
 		Line:   self.Line,
 		Fn:     self.Fn,
 		File:   self.File,
@@ -157,10 +181,6 @@ func (self *ErrX) MarshalJSON() ([]byte, error) {
 		Code: self.Code,
 		Kind: self.Kind,
 		Msg:  self.Msg,
-	}
-
-	for _, e := range self.Errors {
-		data.Errors = append(data.Errors, fmt.Sprintf("%v", e))
 	}
 
 	return json.Marshal(data)
@@ -187,19 +207,15 @@ func (self *ErrX) Response() (bts json.RawMessage) {
 
 func (self *ErrX) Debug() (bts json.RawMessage) {
 	data := struct {
-		Errors []string `json:"errors"`
-		Line   int      `json:"line"`
-		Fn     string   `json:"fn"`
-		File   string   `json:"file"`
+		Errors []json.RawMessage `json:"errors"`
+		Line   int               `json:"line"`
+		Fn     string            `json:"fn"`
+		File   string            `json:"file"`
 	}{
-		Errors: make([]string, 0, len(self.Errors)),
+		Errors: self.ErrorsToJSON(),
 		Line:   self.Line,
 		Fn:     self.Fn,
 		File:   self.File,
-	}
-
-	for _, e := range self.Errors {
-		data.Errors = append(data.Errors, fmt.Sprintf("%+v", e))
 	}
 
 	bts, _ = json.Marshal(data)

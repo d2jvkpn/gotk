@@ -89,4 +89,7 @@ func TestErrx02(t *testing.T) {
 
 	errx.WithErr(e2)
 	fmt.Printf("==> 2. %+#v\n", errx)
+
+	bts, _ := json.Marshal(errx)
+	fmt.Printf("==> 2. %s\n", bts)
 }
