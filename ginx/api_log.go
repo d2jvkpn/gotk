@@ -22,8 +22,8 @@ type Logger[T any] interface {
 	Error(string, ...T)
 }
 
-func NewAPILog(logger Logger[zap.Field], debug bool,
-	metrics ...func(string, float64, codes []string)) (hf gin.HandlerFunc) {
+func NewAPILog(logger Logger[zap.Field], debug bool, meters ...func(string, float64, []string)) (
+	hf gin.HandlerFunc) {
 	gomod, _ := gotk.RootModule()
 	// debug := logger.Level() == zapcore.DebugLevel
 
@@ -105,8 +105,8 @@ func NewAPILog(logger Logger[zap.Field], debug bool,
 				// labelValues[0] = "500"
 			}
 
-			for i := range errHandlers {
-				errHandlers[i](api, latency, err)
+			for i := range meters {
+				meters[i](api, latency, labelValues[:])
 			}
 		}
 
