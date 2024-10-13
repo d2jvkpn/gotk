@@ -6,7 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-func PromMetricsHttp(attrs []string) (fn func(string, float64, []string), err error) {
+func PromMeterHttp(labels []string) (fn func(string, float64, []string), err error) {
 	var (
 		codeCounter    *prometheus.CounterVec
 		requestLatency *prometheus.HistogramVec
@@ -19,7 +19,7 @@ func PromMetricsHttp(attrs []string) (fn func(string, float64, []string), err er
 			Name: "http_code_total",
 			Help: "HTTP response codes counter",
 		},
-		append([]string{"api"}, attrs...),
+		append([]string{"api"}, labels...),
 	)
 
 	requestLatency = prometheus.NewHistogramVec(
@@ -43,8 +43,8 @@ func PromMetricsHttp(attrs []string) (fn func(string, float64, []string), err er
 		}
 	}
 
-	return func(api string, latency float64, codes []string) {
-		labelValues := append([]string{"api"}, codes...)
+	return func(api string, latency float64, values []string) {
+		labelValues := append([]string{"api"}, values...)
 
 		codeCounter.WithLabelValues(labelValues...).Inc()
 		requestLatency.WithLabelValues(api).Observe(latency)

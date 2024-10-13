@@ -22,7 +22,7 @@ import (
 )
 
 // get trace.TracerProvider by otel.GetTracerProvider()
-func OtelTracingGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValue) (
+func OtelTraceGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValue) (
 	shutdown func(context.Context) error, err error) {
 	var (
 		address  string
@@ -118,7 +118,7 @@ func OtelTracingGrpc(appName string, vp *viper.Viper, attrs ...attribute.KeyValu
 	return shutdown, nil
 }
 
-func SetupOtelTracingFile(ctx context.Context, fp, service string, attrs ...attribute.KeyValue) (
+func SetupOtelTraceFile(ctx context.Context, fp, service string, attrs ...attribute.KeyValue) (
 	closeOtel func(context.Context) error, err error) {
 	var (
 		file     *os.File

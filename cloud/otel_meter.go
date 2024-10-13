@@ -19,7 +19,7 @@ import (
 )
 
 // not export to otel-collector, but export metrics to promethus http handler(/metrics)
-func OtelMetrics2Prom(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
+func OtelMeter2Prom(appName string, vp *viper.Viper) (otelmetric.Meter, error) {
 	var (
 		err      error
 		exporter *otelprometheus.Exporter
@@ -46,7 +46,7 @@ func OtelMetrics2Prom(appName string, vp *viper.Viper) (otelmetric.Meter, error)
 
 // https://opentelemetry.io/docs/languages/go/getting-started/
 // get otelmetric.Meter by otel.GetMeterProvider()
-func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
+func OtelMeterGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 	shutdown func(context.Context) error, err error) {
 	var (
 		ctx      context.Context
@@ -112,7 +112,7 @@ func OtelMetricsGrpc(appName string, vp *viper.Viper, withRuntime bool) (
 	return shutdown, nil
 }
 
-func OtelMetricsHttp(meter otelmetric.Meter, attrs []string) (
+func OtelMeterHttp(meter otelmetric.Meter, labels []string) (
 	fn func(string, float64, []string), err error) {
 	var (
 		codeCounter    otelmetric.Float64Counter
@@ -143,12 +143,12 @@ func OtelMetricsHttp(meter otelmetric.Meter, attrs []string) (
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 
-		attributes = make([]attribute.KeyValue, 0, 1+len(attrs))
+		attributes = make([]attribute.KeyValue, 0, 1+len(labels))
 
 		attributes = append(attributes, attribute.Key("api").String(api))
 
-		for i := 0; i < min(len(attrs), len(values)); i++ {
-			attributes = append(attributes, attribute.Key(attrs[i]).String(values[i]))
+		for i := 0; i < min(len(labels), len(values)); i++ {
+			attributes = append(attributes, attribute.Key(labels[i]).String(values[i]))
 		}
 
 		codeCounter.Add(ctx, 1, otelmetric.WithAttributes(attributes...))

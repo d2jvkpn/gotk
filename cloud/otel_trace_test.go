@@ -26,8 +26,8 @@ test_tracer0001:
 - call02
 - job01
 */
-func TestSetupOtelTracingFile(t *testing.T) {
-	shutdown, err := SetupOtelTracingFile(
+func TestSetupOtelTraceFile(t *testing.T) {
+	shutdown, err := SetupOtelTraceFile(
 		_TestCtx,
 		"wk/tracing.out",
 		"TestTracer",
