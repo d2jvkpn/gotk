@@ -131,7 +131,7 @@ func OtelMeterHttp(meter otelmetric.Meter, labels []string) (
 	requestLatency, err = meter.Float64Histogram(
 		"http_latency",
 		otelmetric.WithDescription("HTTP response latency milliseconds"),
-		otelmetric.WithExplicitBucketBoundaries(10.0, 100.0, 200.0, 500.0, 1000.0, 5000.0),
+		otelmetric.WithExplicitBucketBoundaries(100.0, 200.0, 500.0, 1000.0, 5000.0),
 	)
 	if err != nil {
 		return nil, err

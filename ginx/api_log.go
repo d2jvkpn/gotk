@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/d2jvkpn/gotk"
-	"github.com/d2jvkpn/gotk/trace_error"
+	// "github.com/d2jvkpn/gotk/trace_error"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -22,22 +22,24 @@ type Logger[T any] interface {
 	Error(string, ...T)
 }
 
-func NewAPILog(logger Logger[zap.Field], debug bool, meters ...func(string, float64, []string)) (
-	hf gin.HandlerFunc) {
+func NewAPILog(logger Logger[zap.Field], debug bool,
+	errorHandler func(*gin.Context) []string,
+	meters ...func(string, float64, []string),
+) (hf gin.HandlerFunc) {
 	gomod, _ := gotk.RootModule()
 	// debug := logger.Level() == zapcore.DebugLevel
 
 	hf = func(ctx *gin.Context) {
 		var (
-			e           error
-			api         string
-			requestId   string
-			panicField  map[string]any
-			start       time.Time
-			err         *trace_error.Error
+			e          error
+			api        string
+			requestId  string
+			panicField map[string]any
+			start      time.Time
+			// err         *trace_error.Error
 			fields      []zap.Field
 			data        any
-			labelValues [2]string
+			labelValues []string
 		)
 
 		// concurrentRequests.Inc()
@@ -50,15 +52,14 @@ func NewAPILog(logger Logger[zap.Field], debug bool, meters ...func(string, floa
 
 		start = time.Now()
 		requestId = uuid.New().String()
-		// ctx.Set("RequestId", requestId) // CONTEXT_RequestId
+		ctx.Set("RequestId", requestId)
 		ctx.Header("x-request-id", requestId)
 		// ctx.Header("x-server", server) // HEADER_Server
 
-		// HEADER_Client
 		// client := ctx.GetHeader("x-client")
 
 		appendString("ip", ctx.ClientIP())
-		appendString("request", api)
+		appendString("bizName", api)
 		appendString("query", ctx.Request.URL.RawQuery)
 
 		final := func() {
@@ -76,12 +77,16 @@ func NewAPILog(logger Logger[zap.Field], debug bool, meters ...func(string, floa
 			status := ctx.Writer.Status()
 			fields = append(fields, zap.Int("status", status))
 
-			labelValues[0], labelValues[1] = "OK", ""
+			labelValues = []string{"OK"}
 			if status != http.StatusOK {
-				if err, e = Get[*trace_error.Error](ctx, "Error"); e == nil { // CONTEXT_Error
-					fields = append(fields, zap.Any("error", &err))
-					labelValues[0], labelValues[1] = err.Code, err.Kind
-				}
+				/*
+					if err, e = Get[*trace_error.Error](ctx, "Error"); e == nil { // CONTEXT_Error
+						fields = append(fields, zap.Any("error", &err))
+						labelValues[0], labelValues[1] = err.Code, err.Kind
+					}
+				*/
+
+				labelValues = errorHandler(ctx)
 			}
 
 			// CONTEXT_Data
@@ -111,26 +116,16 @@ func NewAPILog(logger Logger[zap.Field], debug bool, meters ...func(string, floa
 		}
 
 		defer func() {
-			var (
-				panicData any
-				panicErr  *trace_error.Error
-			)
+			var panicData any
 
 			if panicData = recover(); panicData == nil {
 				return
 			}
 
-			// errx.NoTrace(), errx.Skip(5)
-			panicErr = trace_error.NewError(
-				fmt.Errorf("panic"),
-				"internal_error",
-				"InternalError",
-				trace_error.NoTrace(),
-			)
-			ctx.JSON(http.StatusInternalServerError, panicErr)
+			ctx.JSON(http.StatusInternalServerError, gin.H{})
 
 			stacks := gotk.Stack(gomod)
-			panicField = map[string]any{"error": panicErr, "data": &panicData, "stacks": stacks}
+			panicField = map[string]any{"data": &panicData, "stacks": stacks}
 
 			final()
 		}()

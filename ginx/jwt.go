@@ -159,6 +159,7 @@ func (self *JwtHMAC) ParsePayload(signed string) (data *JwtData, err error) {
 	return data, nil
 }
 
+// kind: enum("token_expired", "invalid_token")
 func (self *JwtHMAC) Auth(signed string) (data *JwtData, kind string, err error) {
 	var (
 		ok     bool
