@@ -29,11 +29,11 @@ func NewConfigFromViper(vp *viper.Viper, field string) (
 	}
 
 	if len(config.Addrs) == 0 || config.Version == "" {
-		return nil, nil, fmt.Errorf("invlaid addrs or version")
+		return nil, nil, fmt.Errorf("invalid addrs or version")
 	}
 
 	if config.Topic == "" {
-		return nil, nil, fmt.Errorf("invlaid topic")
+		return nil, nil, fmt.Errorf("invalid topic")
 	}
 
 	scfg = sarama.NewConfig()
